@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+sqlalchemy
+pydantic
+python-telegram-bot==20.7
+qrcode[pil]==7.4.2
+PyJWT==2.9.0

@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Отслеживание заказа — Blinds Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f4f6f9;
+      --surface: #ffffff;
+      --text: #1a1d26;
+      --text-muted: #6b7280;
+      --border: #e5e7eb;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --primary-light: #eff6ff;
+      --success: #16a34a;
+      --success-light: #dcfce7;
+      --pending: #d1d5db;
+      --shadow: 0 4px 24px rgba(15, 23, 42, 0.08);
+      --radius: 16px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .page {
+      max-width: 560px;
+      margin: 0 auto;
+      padding: 32px 20px 48px;
+    }
+
+    /* Шапка */
+    .header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .logo {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 48px;
+      height: 48px;
+      background: var(--primary-light);
+      border-radius: 12px;
+      margin-bottom: 16px;
+    }
+
+    .logo svg {
+      width: 24px;
+      height: 24px;
+      color: var(--primary);
+    }
+
+    .header h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 6px;
+    }
+
+    .header p {
+      font-size: 0.9375rem;
+      color: var(--text-muted);
+    }
+
+    /* Форма поиска */
+    .search-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+
+    .search-form {
+      display: flex;
+      gap: 10px;
+    }
+
+    .search-input-wrap {
+      flex: 1;
+      position: relative;
+    }
+
+    .search-input-wrap label {
+      display: block;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .search-input {
+      width: 100%;
+      height: 48px;
+      padding: 0 16px;
+      font-family: inherit;
+      font-size: 1rem;
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      color: var(--text);
+    }
+
+    .search-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+
+    .search-input::placeholder {
+      color: #9ca3af;
+    }
+
+    .btn-track {
+      align-self: flex-end;
+      height: 48px;
+      padding: 0 24px;
+      font-family: inherit;
+      font-size: 0.9375rem;
+      font-weight: 600;
+      color: #fff;
+      background: var(--primary);
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .btn-track:hover:not(:disabled) {
+      background: var(--primary-hover);
+    }
+
+    .btn-track:active:not(:disabled) {
+      transform: scale(0.98);
+    }
+
+    .btn-track:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    /* Сообщения об ошибках */
+    .alert {
+      display: none;
+      padding: 14px 16px;
+      border-radius: 10px;
+      font-size: 0.875rem;
+      margin-bottom: 24px;
+    }
+
+    .alert.visible {
+      display: block;
+    }
+
+    .alert-error {
+      background: #fef2f2;
+      color: #b91c1c;
+      border: 1px solid #fecaca;
+    }
+
+    /* Карточка заказа */
+    .order-card {
+      display: none;
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      animation: fadeIn 0.35s ease;
+    }
+
+    .order-card.visible {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .order-header {
+      padding: 24px 24px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .order-number {
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    .order-number span {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .order-info-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .info-row {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .info-label {
+      font-size: 0.75rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+    }
+
+    .info-value {
+      font-size: 0.9375rem;
+      font-weight: 500;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      background: var(--primary-light);
+      color: var(--primary);
+      width: fit-content;
+    }
+
+    .status-badge.delivered {
+      background: var(--success-light);
+      color: var(--success);
+    }
+
+    .status-badge.cancelled {
+      background: #fef2f2;
+      color: #b91c1c;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    /* Таймлайн */
+    .timeline-section {
+      padding: 24px;
+    }
+
+    .timeline-title {
+      font-size: 0.8125rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+    }
+
+    .timeline {
+      list-style: none;
+      position: relative;
+    }
+
+    .timeline-item {
+      position: relative;
+      padding-left: 36px;
+      padding-bottom: 28px;
+    }
+
+    .timeline-item:last-child {
+      padding-bottom: 0;
+    }
+
+    /* Вертикальная линия */
+    .timeline-item::before {
+      content: "";
+      position: absolute;
+      left: 11px;
+      top: 24px;
+      bottom: 0;
+      width: 2px;
+      background: var(--pending);
+    }
+
+    .timeline-item.completed::before {
+      background: var(--success);
+    }
+
+    .timeline-item:last-child::before {
+      display: none;
+    }
+
+    /* Кружок этапа */
+    .timeline-dot {
+      position: absolute;
+      left: 0;
+      top: 2px;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--pending);
+      border: 3px solid var(--surface);
+      box-shadow: 0 0 0 2px var(--pending);
+      z-index: 1;
+      transition: background 0.3s, box-shadow 0.3s;
+    }
+
+    .timeline-item.completed .timeline-dot {
+      background: var(--success);
+      box-shadow: 0 0 0 2px var(--success);
+    }
+
+    .timeline-item.current .timeline-dot {
+      background: var(--success);
+      box-shadow: 0 0 0 2px var(--success), 0 0 0 6px rgba(22, 163, 74, 0.2);
+    }
+
+    .timeline-item.completed .timeline-dot::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 8px;
+      height: 5px;
+      border-left: 2px solid #fff;
+      border-bottom: 2px solid #fff;
+      transform: translate(-50%, -60%) rotate(-45deg);
+    }
+
+    .timeline-label {
+      font-size: 0.9375rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .timeline-item.completed .timeline-label,
+    .timeline-item.current .timeline-label {
+      color: var(--text);
+    }
+
+    .timeline-meta {
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .timeline-date {
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .timeline-comment {
+      display: block;
+      font-style: italic;
+      color: #9ca3af;
+    }
+
+    /* Загрузка */
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 32px;
+      color: var(--text-muted);
+      font-size: 0.875rem;
+    }
+
+    .loading.visible {
+      display: block;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 24px;
+      height: 24px;
+      border: 2.5px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin-bottom: 10px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Адаптив */
+    /* Ссылка на панель сотрудника */
+    .staff-link {
+      text-align: center;
+      margin-top: 32px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+    }
+
+    .staff-link a {
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .staff-link a:hover {
+      color: var(--primary);
+    }
+
+    /* Кнопка подписки на уведомления в Telegram */
+    .telegram-subscribe {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+    }
+
+    .btn-telegram {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      height: 44px;
+      font-family: inherit;
+      font-size: 0.9375rem;
+      font-weight: 600;
+      color: #fff;
+      background: #229ed9;
+      border: none;
+      border-radius: 10px;
+      text-decoration: none;
+      transition: background 0.2s, transform 0.1s;
+    }
+
+    .btn-telegram:hover {
+      background: #1a8bc4;
+    }
+
+    .btn-telegram:active {
+      transform: scale(0.98);
+    }
+
+    .btn-telegram svg {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+
+    @media (max-width: 480px) {
+      .page {
+        padding: 24px 16px 40px;
+      }
+
+      .search-form {
+        flex-direction: column;
+      }
+
+      .btn-track {
+        width: 100%;
+      }
+
+      .order-header,
+      .timeline-section {
+        padding: 20px 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <div class="logo" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <line x1="3" y1="9" x2="21" y2="9"/>
+          <line x1="3" y1="15" x2="21" y2="15"/>
+        </svg>
+      </div>
+      <h1>Отслеживание заказа</h1>
+      <p>Введите номер заказа, чтобы узнать текущий статус</p>
+    </header>
+
+    <div class="search-card">
+      <form class="search-form" id="trackForm">
+        <div class="search-input-wrap">
+          <label for="orderId">Номер заказа</label>
+          <input
+            type="text"
+            inputmode="numeric"
+            pattern="[0-9]*"
+            id="orderId"
+            class="search-input"
+            placeholder="Например, 1"
+            autocomplete="off"
+            required
+          >
+        </div>
+        <button type="submit" class="btn-track" id="trackBtn">Отследить</button>
+      </form>
+    </div>
+
+    <div class="alert alert-error" id="errorAlert" role="alert"></div>
+
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <div>Загрузка данных заказа…</div>
+    </div>
+
+    <article class="order-card" id="orderCard" aria-live="polite">
+      <div class="order-header">
+        <p class="order-number">Заказ № <span id="displayOrderId"></span></p>
+        <div class="order-info-grid">
+          <div class="info-row">
+            <span class="info-label">Клиент</span>
+            <span class="info-value" id="customerName"></span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Товар</span>
+            <span class="info-value" id="productName"></span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Текущий статус</span>
+            <span class="status-badge" id="statusBadge">
+              <span class="status-dot"></span>
+              <span id="statusText"></span>
+            </span>
+          </div>
+        </div>
+
+        <div class="telegram-subscribe">
+          <a
+            id="telegramBtn"
+            class="btn-telegram"
+            href="#"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/>
+            </svg>
+            Получать уведомления в Telegram
+          </a>
+        </div>
+      </div>
+
+      <section class="timeline-section">
+        <h2 class="timeline-title">История доставки</h2>
+        <ol class="timeline" id="timeline"></ol>
+      </section>
+    </article>
+
+    <footer class="staff-link">
+      <a href="/static/admin.html">Панель сотрудника</a>
+    </footer>
+  </div>
+
+  <script>
+    /** Имя бота в Telegram (без @). Замените на имя вашего бота. */
+    const TELEGRAM_BOT_USERNAME = "BOTNAME";
+
+    /**
+     * Все этапы заказа в порядке прохождения.
+     * key — значение статуса из API, label — отображаемое название.
+     */
+    const TRACKING_STAGES = [
+      { key: "new", label: "Принят" },
+      { key: "in_production", label: "В производстве" },
+      { key: "ready", label: "Готов" },
+      { key: "handed_to_courier", label: "Передан курьеру" },
+      { key: "in_transit", label: "В пути" },
+      { key: "delivered", label: "Доставлен" },
+    ];
+
+    /** Человекочитаемые названия статусов заказа */
+    const STATUS_LABELS = {
+      new: "Принят",
+      in_production: "В производстве",
+      ready: "Готов",
+      handed_to_courier: "Передан курьеру",
+      in_transit: "В пути",
+      delivered: "Доставлен",
+      cancelled: "Отменён",
+    };
+
+    const form = document.getElementById("trackForm");
+    const orderIdInput = document.getElementById("orderId");
+    const trackBtn = document.getElementById("trackBtn");
+    const errorAlert = document.getElementById("errorAlert");
+    const loading = document.getElementById("loading");
+    const orderCard = document.getElementById("orderCard");
+
+    /**
+     * Форматирует дату ISO в локальный вид: «11 июня 2026, 14:30»
+     */
+    function formatDate(isoString) {
+      const date = new Date(isoString);
+      return date.toLocaleString("ru-RU", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    }
+
+    /**
+     * Скрывает сообщение об ошибке
+     */
+    function hideError() {
+      errorAlert.classList.remove("visible");
+      errorAlert.textContent = "";
+    }
+
+    /**
+     * Показывает сообщение об ошибке
+     */
+    function showError(message) {
+      errorAlert.textContent = message;
+      errorAlert.classList.add("visible");
+      orderCard.classList.remove("visible");
+    }
+
+    /**
+     * Строит карту этапов: stage_name → { created_at, comment }
+     * При дубликатах берётся последняя запись.
+     */
+    function buildStagesMap(stages) {
+      const map = {};
+      for (const stage of stages) {
+        map[stage.stage_name] = {
+          created_at: stage.created_at,
+          comment: stage.comment,
+        };
+      }
+      return map;
+    }
+
+    /**
+     * Рендерит вертикальный таймлайн этапов заказа
+     */
+    function renderTimeline(order) {
+      const timeline = document.getElementById("timeline");
+      timeline.innerHTML = "";
+
+      const stagesMap = buildStagesMap(order.stages);
+      const currentIndex = TRACKING_STAGES.findIndex((s) => s.key === order.status);
+
+      TRACKING_STAGES.forEach((stage, index) => {
+        const li = document.createElement("li");
+        li.className = "timeline-item";
+
+        const isCompleted = currentIndex >= 0 && index < currentIndex;
+        const isCurrent = index === currentIndex;
+        const stageData = stagesMap[stage.key];
+
+        if (isCompleted || isCurrent) {
+          li.classList.add("completed");
+        }
+        if (isCurrent) {
+          li.classList.add("current");
+        }
+
+        const dot = document.createElement("div");
+        dot.className = "timeline-dot";
+        li.appendChild(dot);
+
+        const label = document.createElement("div");
+        label.className = "timeline-label";
+        label.textContent = stage.label;
+        li.appendChild(label);
+
+        // Дата и комментарий показываем только для пройденных этапов с данными
+        if ((isCompleted || isCurrent) && stageData) {
+          const meta = document.createElement("div");
+          meta.className = "timeline-meta";
+
+          const dateEl = document.createElement("span");
+          dateEl.className = "timeline-date";
+          dateEl.textContent = formatDate(stageData.created_at);
+          meta.appendChild(dateEl);
+
+          if (stageData.comment) {
+            const commentEl = document.createElement("span");
+            commentEl.className = "timeline-comment";
+            commentEl.textContent = stageData.comment;
+            meta.appendChild(commentEl);
+          }
+
+          li.appendChild(meta);
+        }
+
+        timeline.appendChild(li);
+      });
+    }
+
+    /**
+     * Отображает карточку заказа
+     */
+    function renderOrder(order) {
+      document.getElementById("displayOrderId").textContent = order.id;
+      document.getElementById("customerName").textContent = order.customer_name;
+      document.getElementById("productName").textContent = order.product_name;
+
+      const statusText = STATUS_LABELS[order.status] || order.status;
+      document.getElementById("statusText").textContent = statusText;
+
+      const badge = document.getElementById("statusBadge");
+      badge.className = "status-badge";
+      if (order.status === "delivered") {
+        badge.classList.add("delivered");
+      } else if (order.status === "cancelled") {
+        badge.classList.add("cancelled");
+      }
+
+      renderTimeline(order);
+
+      document.getElementById("telegramBtn").href =
+        `https://t.me/${TELEGRAM_BOT_USERNAME}?start=${order.id}`;
+
+      orderCard.classList.add("visible");
+    }
+
+    /**
+     * Запрашивает данные заказа по API
+     */
+    async function fetchOrder(orderId) {
+      const response = await fetch(`/orders/${orderId}`);
+
+      if (response.status === 404) {
+        throw new Error("Заказ с таким номером не найден. Проверьте введённые данные.");
+      }
+
+      if (!response.ok) {
+        throw new Error("Не удалось загрузить данные заказа. Попробуйте позже.");
+      }
+
+      return response.json();
+    }
+
+    /**
+     * Обработчик отправки формы
+     */
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      hideError();
+
+      const rawId = orderIdInput.value.trim();
+      const orderId = parseInt(rawId, 10);
+
+      if (!rawId || isNaN(orderId) || orderId <= 0) {
+        showError("Введите корректный номер заказа.");
+        return;
+      }
+
+      loading.classList.add("visible");
+      orderCard.classList.remove("visible");
+      trackBtn.disabled = true;
+
+      try {
+        const order = await fetchOrder(orderId);
+        renderOrder(order);
+      } catch (err) {
+        showError(err.message || "Произошла ошибка при загрузке заказа.");
+      } finally {
+        loading.classList.remove("visible");
+        trackBtn.disabled = false;
+      }
+    });
+
+    // Автозагрузка заказа из query-параметра ?order=123
+    const urlParams = new URLSearchParams(window.location.search);
+    const presetId = urlParams.get("order");
+    if (presetId) {
+      orderIdInput.value = presetId;
+      form.dispatchEvent(new Event("submit"));
+    }
+  </script>
+</body>
+</html>

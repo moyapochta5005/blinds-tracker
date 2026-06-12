@@ -1,0 +1,17 @@
+services:
+  web:
+    build: .
+    ports:
+      - "8002:8000"
+    environment:
+      SECRET_KEY: ${SECRET_KEY:-change-me-in-production}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      # Абсолютный путь к БД внутри тома (4 слэша — стандарт SQLite URL)
+      DATABASE_URL: sqlite:////app/data/orders.db
+    volumes:
+      # Том для orders.db: монтируем каталог, а не файл (Docker создаёт директорию при mount файла)
+      - orders_db:/app/data
+    restart: unless-stopped
+
+volumes:
+  orders_db:
