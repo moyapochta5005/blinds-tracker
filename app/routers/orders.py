@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.auth_middleware import get_current_user, get_optional_user
 from app.database import get_db
-from app.models import Order, OrderStage
+from app.models import Order, OrderStage, User
 from app.notifications import send_telegram_notification
 from app.schemas import OrderCreate, OrderResponse, OrderStatusUpdate
 
@@ -99,10 +99,26 @@ def create_order(
     db: DbSession,
     current_user: CurrentUser,
 ) -> OrderResponse:
-    """Создать новый заказ и привязать к текущему менеджеру."""
+    """Создать новый заказ и привязать к менеджеру."""
     manager_id: Optional[int] = None
     if current_user["role"] == "manager":
         manager_id = current_user["manager_id"]
+    elif order_data.manager_id is not None:
+        manager = (
+            db.query(User)
+            .filter(
+                User.id == order_data.manager_id,
+                User.role == "manager",
+                User.is_active.is_(True),
+            )
+            .first()
+        )
+        if manager is None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Менеджер не найден или неактивен",
+            )
+        manager_id = order_data.manager_id
 
     order = Order(
         customer_name=order_data.customer_name,
@@ -113,6 +129,16 @@ def create_order(
         manager_id=manager_id,
     )
     db.add(order)
+    db.flush()
+
+    if order_data.comment:
+        stage = OrderStage(
+            order_id=order.id,
+            stage_name=order_data.status.value,
+            comment=order_data.comment,
+        )
+        db.add(stage)
+
     db.commit()
     db.refresh(order)
 

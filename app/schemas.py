@@ -99,8 +99,18 @@ class OrderBase(BaseModel):
 class OrderCreate(OrderBase):
     """Схема создания нового заказа."""
 
+    customer_phone: str = Field(
+        ...,
+        pattern=r"^\+7\d{10}$",
+        description="Телефон клиента в формате +7XXXXXXXXXX",
+    )
     status: OrderStatus = OrderStatus.NEW
     telegram_chat_id: Optional[str] = None
+    comment: Optional[str] = None
+    manager_id: Optional[int] = Field(
+        default=None,
+        description="ID менеджера (только для администратора)",
+    )
 
 
 class OrderStatusUpdate(BaseModel):

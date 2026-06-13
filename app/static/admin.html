@@ -267,6 +267,155 @@
       height: 16px;
     }
 
+    .btn-new-order {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      font-family: inherit;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: #fff;
+      background: var(--primary);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .btn-new-order:hover {
+      background: var(--primary-hover);
+    }
+
+    .btn-new-order svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .btn-new-order.hidden {
+      display: none;
+    }
+
+    /* ——— Модальное окно нового заказа ——— */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.45);
+      z-index: 300;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-overlay.visible {
+      display: flex;
+    }
+
+    .modal {
+      background: #ffffff;
+      border-radius: var(--radius);
+      width: 100%;
+      max-width: 480px;
+      box-shadow: 0 8px 32px rgba(15, 23, 42, 0.18);
+      overflow: hidden;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 24px 0;
+    }
+
+    .modal-header h2 {
+      font-size: 1.125rem;
+      font-weight: 700;
+    }
+
+    .modal-close {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      background: none;
+      border: none;
+      border-radius: 8px;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .modal-close:hover {
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .modal-body {
+      padding: 20px 24px;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      padding: 0 24px 24px;
+    }
+
+    .modal-form-error {
+      display: none;
+      padding: 10px 12px;
+      margin-bottom: 14px;
+      font-size: 0.8125rem;
+      color: var(--danger);
+      background: var(--danger-light);
+      border: 1px solid #fecaca;
+      border-radius: 8px;
+    }
+
+    .modal-form-error.visible {
+      display: block;
+    }
+
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      font-family: inherit;
+      font-size: 0.9375rem;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--text);
+    }
+
+    .form-group textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+
+    .form-group input:invalid:not(:placeholder-shown) {
+      border-color: var(--danger);
+    }
+
+    .btn-cancel {
+      padding: 10px 18px;
+      font-family: inherit;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .btn-cancel:hover {
+      background: var(--border);
+    }
+
     .content {
       flex: 1;
       padding: 24px 28px 40px;
@@ -1369,6 +1518,10 @@
               <option value="">Все менеджеры</option>
             </select>
           </div>
+          <button class="btn-new-order hidden" id="btnNewOrder" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Новый заказ
+          </button>
           <button class="btn-refresh" id="btnRefresh" type="button">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
             Обновить
@@ -1533,6 +1686,49 @@
     </div>
   </div>
 
+  <!-- Модальное окно создания заказа -->
+  <div class="modal-overlay" id="newOrderModal" role="dialog" aria-modal="true" aria-labelledby="newOrderModalTitle">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="newOrderModalTitle">Новый заказ</h2>
+        <button class="modal-close" id="btnCloseNewOrder" type="button" aria-label="Закрыть">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <form id="newOrderForm">
+        <div class="modal-body">
+          <div class="modal-form-error" id="newOrderFormError" role="alert"></div>
+          <div class="form-group">
+            <label for="newOrderCustomerName">Имя клиента *</label>
+            <input type="text" id="newOrderCustomerName" name="customer_name" required autocomplete="name" placeholder="Иван Иванов">
+          </div>
+          <div class="form-group">
+            <label for="newOrderCustomerPhone">Телефон клиента *</label>
+            <input type="tel" id="newOrderCustomerPhone" name="customer_phone" required autocomplete="tel" placeholder="+79991234567" pattern="\+7\d{10}" title="Формат: +7 и 10 цифр">
+          </div>
+          <div class="form-group">
+            <label for="newOrderProductName">Название товара *</label>
+            <input type="text" id="newOrderProductName" name="product_name" required placeholder="Рулонные шторы, белые">
+          </div>
+          <div class="form-group">
+            <label for="newOrderComment">Комментарий</label>
+            <textarea id="newOrderComment" name="comment" placeholder="Дополнительная информация по заказу"></textarea>
+          </div>
+          <div class="form-group admin-only hidden" id="newOrderManagerWrap">
+            <label for="newOrderManager">Назначить менеджеру</label>
+            <select id="newOrderManager" name="manager_id">
+              <option value="">Не назначать</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-cancel" id="btnCancelNewOrder" type="button">Отмена</button>
+          <button class="btn-primary" id="btnCreateOrder" type="submit">Создать заказ</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script>
     /**
      * Цепочка статусов заказа в порядке прохождения (соответствует API).
@@ -1598,6 +1794,15 @@
     const createManagerForm = document.getElementById("createManagerForm");
     const managersTableBody = document.getElementById("managersTableBody");
     const managersLoading = document.getElementById("managersLoading");
+    const btnNewOrder = document.getElementById("btnNewOrder");
+    const newOrderModal = document.getElementById("newOrderModal");
+    const newOrderForm = document.getElementById("newOrderForm");
+    const newOrderFormError = document.getElementById("newOrderFormError");
+    const newOrderManager = document.getElementById("newOrderManager");
+    const btnCreateOrder = document.getElementById("btnCreateOrder");
+
+    /** Регулярное выражение для телефона в формате +7XXXXXXXXXX */
+    const PHONE_PATTERN = /^\+7\d{10}$/;
 
     /** Состояние приложения */
     let allOrders = [];
@@ -1736,11 +1941,13 @@
         document.getElementById("pageSubtitle").textContent =
           "Управление статусами и этапами производства";
         managerFilterWrap.classList.toggle("visible", currentRole === "admin");
+        btnNewOrder.classList.remove("hidden");
       } else {
         document.getElementById("pageTitle").textContent = "Управление менеджерами";
         document.getElementById("pageSubtitle").textContent =
           "Создание и редактирование учётных записей менеджеров";
         managerFilterWrap.classList.remove("visible");
+        btnNewOrder.classList.add("hidden");
       }
     }
 
@@ -2205,6 +2412,76 @@
     }
 
     /**
+     * Заполняет выпадающий список менеджеров в форме нового заказа.
+     */
+    function populateNewOrderManagers() {
+      const currentValue = newOrderManager.value;
+      newOrderManager.innerHTML = '<option value="">Не назначать</option>';
+
+      for (const manager of allManagers) {
+        if (!manager.is_active) continue;
+        const option = document.createElement("option");
+        option.value = String(manager.id);
+        option.textContent = manager.full_name;
+        newOrderManager.appendChild(option);
+      }
+
+      newOrderManager.value = currentValue;
+    }
+
+    /**
+     * Открывает модальное окно создания заказа.
+     */
+    async function openNewOrderModal() {
+      newOrderForm.reset();
+      newOrderFormError.textContent = "";
+      newOrderFormError.classList.remove("visible");
+
+      if (currentRole === "admin") {
+        try {
+          allManagers = await fetchManagers();
+          populateNewOrderManagers();
+        } catch (err) {
+          showError(err.message || "Не удалось загрузить список менеджеров.");
+          return;
+        }
+      }
+
+      newOrderModal.classList.add("visible");
+      document.getElementById("newOrderCustomerName").focus();
+    }
+
+    /**
+     * Закрывает модальное окно создания заказа.
+     */
+    function closeNewOrderModal() {
+      newOrderModal.classList.remove("visible");
+      newOrderFormError.classList.remove("visible");
+    }
+
+    /**
+     * Создаёт новый заказ через API.
+     */
+    async function createOrder(payload) {
+      const response = await apiFetch("/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        const detail = data.detail;
+        if (Array.isArray(detail)) {
+          throw new Error(detail.map((item) => item.msg).join(" "));
+        }
+        throw new Error(detail || "Не удалось создать заказ.");
+      }
+
+      return response.json();
+    }
+
+    /**
      * Перезагружает данные и обновляет интерфейс.
      */
     async function loadOrders() {
@@ -2257,6 +2534,75 @@
 
     document.getElementById("btnRefresh").addEventListener("click", loadOrders);
     document.getElementById("btnCloseDetail").addEventListener("click", closeDetail);
+
+    btnNewOrder.addEventListener("click", openNewOrderModal);
+    document.getElementById("btnCloseNewOrder").addEventListener("click", closeNewOrderModal);
+    document.getElementById("btnCancelNewOrder").addEventListener("click", closeNewOrderModal);
+
+    newOrderModal.addEventListener("click", (event) => {
+      if (event.target === newOrderModal) {
+        closeNewOrderModal();
+      }
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && newOrderModal.classList.contains("visible")) {
+        closeNewOrderModal();
+      }
+    });
+
+    newOrderForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      newOrderFormError.classList.remove("visible");
+
+      const customerName = document.getElementById("newOrderCustomerName").value.trim();
+      const customerPhone = document.getElementById("newOrderCustomerPhone").value.trim();
+      const productName = document.getElementById("newOrderProductName").value.trim();
+      const comment = document.getElementById("newOrderComment").value.trim();
+
+      if (!customerName || !productName) {
+        newOrderFormError.textContent = "Заполните все обязательные поля.";
+        newOrderFormError.classList.add("visible");
+        return;
+      }
+
+      if (!PHONE_PATTERN.test(customerPhone)) {
+        newOrderFormError.textContent = "Телефон должен быть в формате +7XXXXXXXXXX.";
+        newOrderFormError.classList.add("visible");
+        return;
+      }
+
+      const payload = {
+        customer_name: customerName,
+        customer_phone: customerPhone,
+        product_name: productName,
+      };
+
+      if (comment) {
+        payload.comment = comment;
+      }
+
+      if (currentRole === "admin") {
+        const managerId = newOrderManager.value;
+        if (managerId) {
+          payload.manager_id = Number(managerId);
+        }
+      }
+
+      btnCreateOrder.disabled = true;
+
+      try {
+        await createOrder(payload);
+        closeNewOrderModal();
+        showSuccess("Заказ успешно создан.");
+        await loadOrders();
+      } catch (err) {
+        newOrderFormError.textContent = err.message || "Ошибка создания заказа.";
+        newOrderFormError.classList.add("visible");
+      } finally {
+        btnCreateOrder.disabled = false;
+      }
+    });
 
     actionForm.addEventListener("submit", async (event) => {
       event.preventDefault();
