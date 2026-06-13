@@ -1704,7 +1704,11 @@
           <div class="panel-card">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px">
               <h2>Установщики</h2>
-              <button class="btn-primary" type="button" onclick="showInstallerForm()">+ Добавить</button>
+              <div style="display:flex; gap:8px">
+                <button class="btn-primary" type="button" onclick="showInstallerForm()">+ Добавить</button>
+                <button type="button" onclick="document.getElementById('installer-import-file').click()">📁 Импорт из файла</button>
+                <input type="file" id="installer-import-file" accept=".csv,.xlsx" style="display:none" onchange="importInstallers(this.files[0])">
+              </div>
             </div>
 
             <div id="installer-form" style="display:none; background:var(--bg); padding:16px; border-radius:8px; margin-bottom:16px; border:1px solid var(--border)">
@@ -1720,6 +1724,8 @@
                 <button class="btn-sm" type="button" onclick="hideInstallerForm()">Отмена</button>
               </div>
             </div>
+
+            <div id="installer-import-result" style="display:none; padding:12px; border-radius:8px; margin-bottom:16px"></div>
 
             <div class="loading-state" id="installersLoading" style="display: none;">
               <div class="spinner"></div>
@@ -2615,6 +2621,76 @@
       } catch (err) {
         showError(err.message || "Ошибка сохранения установщика.");
       }
+    }
+
+    /**
+     * Импортирует установщиков из CSV или XLSX-файла.
+     */
+    async function importInstallers(file) {
+      if (!file) return;
+      const token = getAuthToken();
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const resultBox = document.getElementById("installer-import-result");
+      resultBox.style.display = "block";
+      resultBox.style.background = "#f0f7ff";
+      resultBox.style.border = "1px solid #b3d4fc";
+      resultBox.innerHTML = "⏳ Загружаем и обрабатываем файл...";
+
+      try {
+        const res = await fetch("/installers/import", {
+          method: "POST",
+          headers: { Authorization: "Bearer " + token },
+          body: formData,
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.detail || "Ошибка загрузки файла");
+        }
+
+        const summary = await res.json();
+        renderImportResult(summary);
+        loadInstallers();
+      } catch (e) {
+        resultBox.style.background = "#fff0f0";
+        resultBox.style.border = "1px solid #f5b3b3";
+        resultBox.innerHTML = "❌ " + (e.message || "Не удалось импортировать файл");
+      }
+
+      document.getElementById("installer-import-file").value = "";
+    }
+
+    /**
+     * Отображает сводку результата импорта установщиков.
+     */
+    function renderImportResult(summary) {
+      const resultBox = document.getElementById("installer-import-result");
+      resultBox.style.background = "#f0fff4";
+      resultBox.style.border = "1px solid #b3e6c2";
+
+      const errors = summary.details.filter((d) => d.status === "error");
+      const skipped = summary.details.filter((d) => d.status === "skipped_duplicate");
+
+      let html = `
+        <div style="font-weight:600; margin-bottom:8px">Импорт завершён</div>
+        <div>Всего строк: <b>${summary.total}</b></div>
+        <div style="color:#1a7c2e">Создано: <b>${summary.created}</b></div>
+        <div style="color:#a86b00">Пропущено (дубли): <b>${summary.skipped}</b></div>
+        <div style="color:#c0392b">Ошибок: <b>${summary.errors}</b></div>
+      `;
+
+      if (errors.length || skipped.length) {
+        html += '<details style="margin-top:8px"><summary style="cursor:pointer">Подробности</summary><div style="margin-top:8px; max-height:200px; overflow-y:auto">';
+        [...errors, ...skipped].forEach((d) => {
+          const color = d.status === "error" ? "#c0392b" : "#a86b00";
+          html += `<div style="color:${color}; font-size:0.875rem; margin-bottom:4px">Строка ${d.row}: ${escapeHtml(d.name || "—")} / ${escapeHtml(d.phone || "—")} — ${escapeHtml(d.message || "")}</div>`;
+        });
+        html += "</div></details>";
+      }
+
+      resultBox.innerHTML = html;
     }
 
     /**
