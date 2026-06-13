@@ -184,7 +184,14 @@ class IntegrationOrderCreate(BaseModel):
         description="Телефон клиента в формате +7XXXXXXXXXX",
     )
     product_name: str
-    manager_username: Optional[str] = None
+    installer_id: Optional[int] = Field(
+        default=None,
+        description="ID установщика в трекере (приоритетный способ)",
+    )
+    installer_phone: Optional[str] = Field(
+        default=None,
+        description="Телефон установщика для поиска (если ID неизвестен)",
+    )
     comment: Optional[str] = None
 
 

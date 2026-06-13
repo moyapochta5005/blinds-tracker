@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, Header, HTTPException, status
 from sqlalchemy.orm import Session, joinedload
 
 from app.database import get_db
-from app.models import Order, OrderStage, User
+from app.models import Installer, Order, OrderStage
 from app.notifications import send_telegram_notification
 from app.schemas import (
     IntegrationOrderCreate,
@@ -70,6 +70,37 @@ def _order_to_integration_response(order: Order) -> IntegrationOrderStatusRespon
     )
 
 
+def _resolve_installer(
+    db: Session,
+    installer_id: Optional[int],
+    installer_phone: Optional[str],
+) -> Optional[Installer]:
+    """Находит активного установщика по ID или телефону."""
+    if installer_id is not None:
+        installer = (
+            db.query(Installer)
+            .filter(
+                Installer.id == installer_id,
+                Installer.is_active.is_(True),
+            )
+            .first()
+        )
+        return installer
+
+    if installer_phone is not None:
+        installer = (
+            db.query(Installer)
+            .filter(
+                Installer.phone == installer_phone,
+                Installer.is_active.is_(True),
+            )
+            .first()
+        )
+        return installer
+
+    return None
+
+
 def _get_order_by_external_id(db: Session, external_id: str) -> Order:
     """Возвращает заказ по external_id или выбрасывает 404."""
     order = (
@@ -108,23 +139,16 @@ def create_order_from_1c(
             detail=f"Заказ с external_id «{order_data.external_id}» уже существует",
         )
 
+    installer = _resolve_installer(
+        db,
+        order_data.installer_id,
+        order_data.installer_phone,
+    )
+    installer_id: Optional[int] = None
     manager_id: Optional[int] = None
-    if order_data.manager_username is not None:
-        manager = (
-            db.query(User)
-            .filter(
-                User.username == order_data.manager_username,
-                User.role == "manager",
-                User.is_active.is_(True),
-            )
-            .first()
-        )
-        if manager is None:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Менеджер не найден или неактивен",
-            )
-        manager_id = manager.id
+    if installer is not None:
+        installer_id = installer.id
+        manager_id = installer.manager_id
 
     order = Order(
         external_id=order_data.external_id,
@@ -133,6 +157,7 @@ def create_order_from_1c(
         product_name=order_data.product_name,
         status=OrderStatus.NEW.value,
         manager_id=manager_id,
+        installer_id=installer_id,
     )
     db.add(order)
     db.flush()
