@@ -1,11 +1,26 @@
-"""SQLAlchemy-модели для заказов и этапов их обработки."""
+"""SQLAlchemy-модели для пользователей, заказов и этапов их обработки."""
 
 from datetime import datetime
 
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
 
 from app.database import Base
+
+
+class User(Base):
+    """Пользователь системы (администратор или менеджер)."""
+
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String(100), unique=True, nullable=False, index=True)
+    password_hash = Column(String(255), nullable=False)
+    full_name = Column(String(255), nullable=False)
+    role = Column(String(50), nullable=False)
+    is_active = Column(Boolean, default=True, nullable=False)
+
+    orders = relationship("Order", back_populates="manager")
 
 
 class Order(Base):
@@ -19,6 +34,7 @@ class Order(Base):
     product_name = Column(String(255), nullable=False)
     status = Column(String(50), nullable=False, default="new")
     telegram_chat_id = Column(String(50), nullable=True)
+    manager_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(
         DateTime,
@@ -27,6 +43,7 @@ class Order(Base):
         nullable=False,
     )
 
+    manager = relationship("User", back_populates="orders")
     stages = relationship(
         "OrderStage",
         back_populates="order",

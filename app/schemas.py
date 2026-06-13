@@ -22,6 +22,37 @@ class LoginResponse(BaseModel):
     token_type: str = "bearer"
     username: str
     role: str
+    manager_id: int
+    full_name: str
+
+
+class UserCreate(BaseModel):
+    """Схема создания менеджера."""
+
+    username: str
+    password: str
+    full_name: str
+
+
+class UserUpdate(BaseModel):
+    """Схема обновления данных менеджера."""
+
+    username: Optional[str] = None
+    password: Optional[str] = None
+    full_name: Optional[str] = None
+    is_active: Optional[bool] = None
+
+
+class UserResponse(BaseModel):
+    """Схема ответа с данными пользователя."""
+
+    id: int
+    username: str
+    full_name: str
+    role: str
+    is_active: bool
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class OrderStatus(str, Enum):
@@ -84,6 +115,8 @@ class OrderResponse(OrderBase):
 
     id: int
     status: OrderStatus
+    manager_id: Optional[int] = None
+    manager_name: Optional[str] = None
     created_at: datetime
     updated_at: datetime
     stages: List[OrderStageResponse] = []

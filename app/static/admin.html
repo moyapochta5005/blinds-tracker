@@ -1059,6 +1059,200 @@
         grid-template-columns: 1fr;
       }
     }
+
+    /* ——— Фильтр по менеджеру (админ) ——— */
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-left: auto;
+    }
+
+    .manager-filter {
+      display: none;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .manager-filter.visible {
+      display: flex;
+    }
+
+    .manager-filter label {
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .manager-filter select {
+      font-family: inherit;
+      font-size: 0.8125rem;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--text);
+      min-width: 160px;
+    }
+
+    .admin-only.hidden {
+      display: none !important;
+    }
+
+    /* ——— Панель управления менеджерами ——— */
+    .managers-panel {
+      display: none;
+    }
+
+    .managers-panel.visible {
+      display: block;
+    }
+
+    .managers-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 24px;
+    }
+
+    @media (max-width: 900px) {
+      .managers-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      padding: 24px;
+    }
+
+    .panel-card h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .form-group input {
+      width: 100%;
+      font-family: inherit;
+      font-size: 0.9375rem;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 18px;
+      font-family: inherit;
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #fff;
+      background: var(--primary);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: var(--primary-hover);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .managers-table-wrap {
+      overflow-x: auto;
+    }
+
+    .managers-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+
+    .managers-table th,
+    .managers-table td {
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .managers-table th {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+    }
+
+    .manager-status {
+      display: inline-flex;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .manager-status.active {
+      background: var(--success-light);
+      color: var(--success);
+    }
+
+    .manager-status.inactive {
+      background: var(--danger-light);
+      color: var(--danger);
+    }
+
+    .manager-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn-sm {
+      padding: 6px 10px;
+      font-family: inherit;
+      font-size: 0.75rem;
+      font-weight: 500;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      cursor: pointer;
+    }
+
+    .btn-sm:hover {
+      background: var(--bg);
+    }
+
+    .btn-sm.danger {
+      color: var(--danger);
+      border-color: #fecaca;
+    }
+
+    .orders-view.hidden {
+      display: none;
+    }
   </style>
 </head>
 <body>
@@ -1080,7 +1274,8 @@
         <button class="btn-login" id="btnLogin" type="submit">Войти</button>
       </form>
       <div class="login-hint">
-        Демо: admin/admin123, master/master123, courier/courier123
+        Админ: admin / admin123<br>
+        Менеджеры: manager1 / pass1 … manager5 / pass5
       </div>
     </div>
   </div>
@@ -1140,18 +1335,10 @@
           <span class="nav-badge" id="badgeDelivered">0</span>
         </button>
 
-        <div class="nav-section-title" style="margin-top: 12px;">Роли</div>
-        <button class="nav-item" data-role="master" disabled style="opacity: 0.5; cursor: default;">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-          Мастер цеха
-        </button>
-        <button class="nav-item" data-role="courier" disabled style="opacity: 0.5; cursor: default;">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/></svg>
-          Курьер
-        </button>
-        <button class="nav-item" data-role="manager" disabled style="opacity: 0.5; cursor: default;">
+        <div class="nav-section-title admin-only hidden" id="adminNavSection" style="margin-top: 12px;">Администрирование</div>
+        <button class="nav-item admin-only hidden" id="navManagers" data-view="managers" type="button">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-          Менеджер
+          Управление менеджерами
         </button>
       </nav>
 
@@ -1175,30 +1362,39 @@
           <h1 id="pageTitle">Все заказы</h1>
           <p id="pageSubtitle">Управление статусами и этапами производства</p>
         </div>
-        <button class="btn-refresh" id="btnRefresh" type="button">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
-          Обновить
-        </button>
+        <div class="topbar-actions">
+          <div class="manager-filter" id="managerFilterWrap">
+            <label for="managerFilter">Менеджер</label>
+            <select id="managerFilter">
+              <option value="">Все менеджеры</option>
+            </select>
+          </div>
+          <button class="btn-refresh" id="btnRefresh" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+            Обновить
+          </button>
+        </div>
       </header>
 
       <div class="content">
         <div class="alert alert-error" id="alertError" role="alert"></div>
         <div class="alert alert-success" id="alertSuccess" role="status"></div>
 
-        <div class="loading-state" id="loadingState">
-          <div class="spinner"></div>
-          <div>Загрузка заказов…</div>
-        </div>
+        <div class="orders-view" id="ordersView">
+          <div class="loading-state" id="loadingState">
+            <div class="spinner"></div>
+            <div>Загрузка заказов…</div>
+          </div>
 
-        <div class="empty-state" id="emptyState" style="display: none;">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
-          <p>Заказов не найдено</p>
-        </div>
+          <div class="empty-state" id="emptyState" style="display: none;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/></svg>
+            <p>Заказов не найдено</p>
+          </div>
 
-        <div class="orders-grid" id="ordersGrid"></div>
+          <div class="orders-grid" id="ordersGrid"></div>
 
-        <!-- Детальный вид выбранного заказа -->
-        <section class="detail-panel" id="detailPanel" aria-live="polite">
+          <!-- Детальный вид выбранного заказа -->
+          <section class="detail-panel" id="detailPanel" aria-live="polite">
           <div class="detail-header">
             <div>
               <h2 id="detailTitle">Заказ № —</h2>
@@ -1217,6 +1413,7 @@
                 <div class="detail-info-item"><span>Телефон</span><div id="detailPhone"></div></div>
                 <div class="detail-info-item"><span>Товар</span><div id="detailProduct"></div></div>
                 <div class="detail-info-item"><span>Статус</span><div id="detailStatus"></div></div>
+                <div class="detail-info-item admin-only hidden" id="detailManagerWrap"><span>Менеджер</span><div id="detailManager"></div></div>
               </div>
 
               <div class="qr-section">
@@ -1286,6 +1483,52 @@
             </div>
           </div>
         </section>
+        </div>
+
+        <!-- Управление менеджерами (только админ) -->
+        <section class="managers-panel" id="managersPanel">
+          <div class="managers-grid">
+            <div class="panel-card">
+              <h2>Новый менеджер</h2>
+              <form id="createManagerForm">
+                <div class="form-group">
+                  <label for="newManagerUsername">Логин</label>
+                  <input type="text" id="newManagerUsername" required autocomplete="off">
+                </div>
+                <div class="form-group">
+                  <label for="newManagerPassword">Пароль</label>
+                  <input type="password" id="newManagerPassword" required autocomplete="new-password">
+                </div>
+                <div class="form-group">
+                  <label for="newManagerFullName">Полное имя</label>
+                  <input type="text" id="newManagerFullName" required>
+                </div>
+                <button class="btn-primary" id="btnCreateManager" type="submit">Создать менеджера</button>
+              </form>
+            </div>
+
+            <div class="panel-card">
+              <h2>Список менеджеров</h2>
+              <div class="loading-state" id="managersLoading" style="display: none;">
+                <div class="spinner"></div>
+                <div>Загрузка…</div>
+              </div>
+              <div class="managers-table-wrap">
+                <table class="managers-table">
+                  <thead>
+                    <tr>
+                      <th>Имя</th>
+                      <th>Логин</th>
+                      <th>Статус</th>
+                      <th>Действия</th>
+                    </tr>
+                  </thead>
+                  <tbody id="managersTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
     </div>
   </div>
@@ -1309,12 +1552,13 @@
     const AUTH_TOKEN_KEY = "authToken";
     const AUTH_USERNAME_KEY = "authUsername";
     const AUTH_ROLE_KEY = "authRole";
+    const AUTH_FULL_NAME_KEY = "authFullName";
+    const AUTH_MANAGER_ID_KEY = "authManagerId";
 
     /** Человекочитаемые названия ролей */
     const ROLE_LABELS = {
       admin: "Администратор",
-      master: "Мастер цеха",
-      courier: "Курьер",
+      manager: "Менеджер",
     };
 
     /** Заголовки фильтров в sidebar */
@@ -1346,11 +1590,23 @@
     const loginError = document.getElementById("loginError");
     const btnLogin = document.getElementById("btnLogin");
     const btnLogout = document.getElementById("btnLogout");
+    const ordersView = document.getElementById("ordersView");
+    const managersPanel = document.getElementById("managersPanel");
+    const managerFilterWrap = document.getElementById("managerFilterWrap");
+    const managerFilter = document.getElementById("managerFilter");
+    const navManagers = document.getElementById("navManagers");
+    const createManagerForm = document.getElementById("createManagerForm");
+    const managersTableBody = document.getElementById("managersTableBody");
+    const managersLoading = document.getElementById("managersLoading");
 
     /** Состояние приложения */
     let allOrders = [];
+    let allManagers = [];
     let currentFilter = "all";
+    let currentView = "orders";
+    let currentRole = "";
     let selectedOrderId = null;
+    let selectedManagerFilter = "";
 
     /**
      * Форматирует дату ISO в локальный вид.
@@ -1450,6 +1706,45 @@
     }
 
     /**
+     * Показывает или скрывает элементы только для администратора.
+     */
+    function updateAdminUi(isAdmin) {
+      document.querySelectorAll(".admin-only").forEach((el) => {
+        el.classList.toggle("hidden", !isAdmin);
+      });
+      managerFilterWrap.classList.toggle("visible", isAdmin && currentView === "orders");
+    }
+
+    /**
+     * Переключает вид: заказы или управление менеджерами.
+     */
+    function switchView(view) {
+      currentView = view;
+      const isOrders = view === "orders";
+
+      ordersView.classList.toggle("hidden", !isOrders);
+      managersPanel.classList.toggle("visible", !isOrders);
+
+      document.querySelectorAll(".nav-item[data-filter]").forEach((item) => {
+        item.classList.toggle("active", isOrders && item.dataset.filter === currentFilter);
+      });
+      navManagers.classList.toggle("active", !isOrders);
+
+      if (isOrders) {
+        document.getElementById("pageTitle").textContent =
+          FILTER_TITLES[currentFilter] || "Заказы";
+        document.getElementById("pageSubtitle").textContent =
+          "Управление статусами и этапами производства";
+        managerFilterWrap.classList.toggle("visible", currentRole === "admin");
+      } else {
+        document.getElementById("pageTitle").textContent = "Управление менеджерами";
+        document.getElementById("pageSubtitle").textContent =
+          "Создание и редактирование учётных записей менеджеров";
+        managerFilterWrap.classList.remove("visible");
+      }
+    }
+
+    /**
      * Фильтрует заказы по текущему фильтру sidebar.
      */
     function getFilteredOrders() {
@@ -1484,6 +1779,11 @@
             <span class="order-card-label">Товар</span>
             <span class="order-card-value">${escapeHtml(order.product_name)}</span>
           </div>
+          ${currentRole === "admin" && order.manager_name ? `
+          <div class="order-card-row">
+            <span class="order-card-label">Менеджер</span>
+            <span class="order-card-value">${escapeHtml(order.manager_name)}</span>
+          </div>` : ""}
         </div>
       `;
 
@@ -1574,6 +1874,15 @@
       document.getElementById("detailProduct").textContent = order.product_name;
       document.getElementById("detailStatus").innerHTML = renderStatusBadge(order.status);
 
+      const detailManagerWrap = document.getElementById("detailManagerWrap");
+      if (currentRole === "admin") {
+        detailManagerWrap.classList.remove("hidden");
+        document.getElementById("detailManager").textContent =
+          order.manager_name || "Не назначен";
+      } else {
+        detailManagerWrap.classList.add("hidden");
+      }
+
       const qrUrl = `/orders/${order.id}/qr`;
       document.getElementById("qrPreview").src = qrUrl;
       const btnDownloadQr = document.getElementById("btnDownloadQr");
@@ -1638,10 +1947,12 @@
     /**
      * Сохраняет данные авторизации в localStorage.
      */
-    function saveAuth(token, username, role) {
+    function saveAuth(token, username, role, fullName, managerId) {
       localStorage.setItem(AUTH_TOKEN_KEY, token);
       localStorage.setItem(AUTH_USERNAME_KEY, username);
       localStorage.setItem(AUTH_ROLE_KEY, role);
+      localStorage.setItem(AUTH_FULL_NAME_KEY, fullName);
+      localStorage.setItem(AUTH_MANAGER_ID_KEY, String(managerId));
     }
 
     /**
@@ -1651,6 +1962,8 @@
       localStorage.removeItem(AUTH_TOKEN_KEY);
       localStorage.removeItem(AUTH_USERNAME_KEY);
       localStorage.removeItem(AUTH_ROLE_KEY);
+      localStorage.removeItem(AUTH_FULL_NAME_KEY);
+      localStorage.removeItem(AUTH_MANAGER_ID_KEY);
     }
 
     /**
@@ -1691,10 +2004,13 @@
     /**
      * Показывает панель после успешного входа.
      */
-    function showApp(username, role) {
-      document.getElementById("userName").textContent = username;
+    function showApp(fullName, role) {
+      currentRole = role;
+      document.getElementById("userName").textContent = fullName;
       document.getElementById("userRole").textContent =
         ROLE_LABELS[role] || role;
+      updateAdminUi(role === "admin");
+      switchView("orders");
       loginScreen.classList.add("hidden");
       appMain.classList.remove("hidden");
     }
@@ -1721,10 +2037,148 @@
      * Загружает список заказов с API.
      */
     async function fetchOrders() {
-      const response = await apiFetch("/orders");
+      let url = "/orders";
+      if (currentRole === "admin" && selectedManagerFilter) {
+        url += `?manager_id=${encodeURIComponent(selectedManagerFilter)}`;
+      }
+
+      const response = await apiFetch(url);
       if (!response.ok) {
         throw new Error("Не удалось загрузить список заказов.");
       }
+      return response.json();
+    }
+
+    /**
+     * Загружает список менеджеров (только для администратора).
+     */
+    async function fetchManagers() {
+      const response = await apiFetch("/users");
+      if (!response.ok) {
+        throw new Error("Не удалось загрузить список менеджеров.");
+      }
+      return response.json();
+    }
+
+    /**
+     * Обновляет выпадающий список фильтра по менеджерам.
+     */
+    function populateManagerFilter() {
+      const currentValue = managerFilter.value;
+      managerFilter.innerHTML = '<option value="">Все менеджеры</option>';
+
+      for (const manager of allManagers) {
+        if (!manager.is_active) continue;
+        const option = document.createElement("option");
+        option.value = String(manager.id);
+        option.textContent = manager.full_name;
+        managerFilter.appendChild(option);
+      }
+
+      managerFilter.value = currentValue;
+    }
+
+    /**
+     * Рендерит таблицу менеджеров.
+     */
+    function renderManagersTable() {
+      managersTableBody.innerHTML = "";
+
+      if (allManagers.length === 0) {
+        const row = document.createElement("tr");
+        row.innerHTML = '<td colspan="4" style="color: var(--text-muted);">Менеджеров пока нет</td>';
+        managersTableBody.appendChild(row);
+        return;
+      }
+
+      for (const manager of allManagers) {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${escapeHtml(manager.full_name)}</td>
+          <td>${escapeHtml(manager.username)}</td>
+          <td>
+            <span class="manager-status ${manager.is_active ? "active" : "inactive"}">
+              ${manager.is_active ? "Активен" : "Деактивирован"}
+            </span>
+          </td>
+          <td>
+            <div class="manager-actions">
+              <button class="btn-sm" type="button" data-action="edit" data-id="${manager.id}">Изменить</button>
+              ${manager.is_active ? `<button class="btn-sm danger" type="button" data-action="deactivate" data-id="${manager.id}">Деактивировать</button>` : ""}
+            </div>
+          </td>
+        `;
+        managersTableBody.appendChild(row);
+      }
+    }
+
+    /**
+     * Загружает менеджеров и обновляет UI.
+     */
+    async function loadManagers() {
+      hideAlerts();
+      managersLoading.style.display = "block";
+
+      try {
+        allManagers = await fetchManagers();
+        renderManagersTable();
+        populateManagerFilter();
+      } catch (err) {
+        showError(err.message || "Ошибка загрузки менеджеров.");
+      } finally {
+        managersLoading.style.display = "none";
+      }
+    }
+
+    /**
+     * Создаёт нового менеджера.
+     */
+    async function createManager(username, password, fullName) {
+      const response = await apiFetch("/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password, full_name: fullName }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.detail || "Не удалось создать менеджера.");
+      }
+
+      return response.json();
+    }
+
+    /**
+     * Обновляет данные менеджера.
+     */
+    async function updateManager(managerId, payload) {
+      const response = await apiFetch(`/users/${managerId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.detail || "Не удалось обновить менеджера.");
+      }
+
+      return response.json();
+    }
+
+    /**
+     * Деактивирует менеджера.
+     */
+    async function deactivateManager(managerId) {
+      const response = await apiFetch(`/users/${managerId}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.detail || "Не удалось деактивировать менеджера.");
+      }
+
       return response.json();
     }
 
@@ -1754,12 +2208,22 @@
      * Перезагружает данные и обновляет интерфейс.
      */
     async function loadOrders() {
+      if (currentView !== "orders") {
+        await loadManagers();
+        return;
+      }
+
       hideAlerts();
       loadingState.style.display = "block";
       ordersGrid.innerHTML = "";
       emptyState.style.display = "none";
 
       try {
+        if (currentRole === "admin") {
+          allManagers = await fetchManagers();
+          populateManagerFilter();
+        }
+
         allOrders = await fetchOrders();
         updateBadges();
         renderOrdersGrid();
@@ -1832,6 +2296,7 @@
     // Фильтрация через sidebar
     document.querySelectorAll(".nav-item[data-filter]").forEach((item) => {
       item.addEventListener("click", () => {
+        switchView("orders");
         currentFilter = item.dataset.filter;
         document.querySelectorAll(".nav-item[data-filter]").forEach((n) => {
           n.classList.toggle("active", n === item);
@@ -1841,6 +2306,93 @@
         renderOrdersGrid();
         closeSidebar();
       });
+    });
+
+    navManagers.addEventListener("click", async () => {
+      switchView("managers");
+      closeSidebar();
+      await loadManagers();
+    });
+
+    managerFilter.addEventListener("change", async () => {
+      selectedManagerFilter = managerFilter.value;
+      await loadOrders();
+    });
+
+    createManagerForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      hideAlerts();
+
+      const username = document.getElementById("newManagerUsername").value.trim();
+      const password = document.getElementById("newManagerPassword").value;
+      const fullName = document.getElementById("newManagerFullName").value.trim();
+      const btnCreate = document.getElementById("btnCreateManager");
+
+      btnCreate.disabled = true;
+
+      try {
+        await createManager(username, password, fullName);
+        createManagerForm.reset();
+        showSuccess("Менеджер успешно создан.");
+        await loadManagers();
+      } catch (err) {
+        showError(err.message || "Ошибка создания менеджера.");
+      } finally {
+        btnCreate.disabled = false;
+      }
+    });
+
+    managersTableBody.addEventListener("click", async (event) => {
+      const button = event.target.closest("button[data-action]");
+      if (!button) return;
+
+      const managerId = Number(button.dataset.id);
+      const manager = allManagers.find((m) => m.id === managerId);
+      if (!manager) return;
+
+      hideAlerts();
+
+      if (button.dataset.action === "edit") {
+        const fullName = prompt("Полное имя:", manager.full_name);
+        if (fullName === null) return;
+
+        const username = prompt("Логин:", manager.username);
+        if (username === null) return;
+
+        const password = prompt("Новый пароль (оставьте пустым, чтобы не менять):", "");
+        if (password === null) return;
+
+        const payload = {
+          full_name: fullName.trim(),
+          username: username.trim(),
+        };
+        if (password.trim()) {
+          payload.password = password;
+        }
+
+        try {
+          await updateManager(managerId, payload);
+          showSuccess("Данные менеджера обновлены.");
+          await loadManagers();
+        } catch (err) {
+          showError(err.message || "Ошибка обновления менеджера.");
+        }
+        return;
+      }
+
+      if (button.dataset.action === "deactivate") {
+        if (!confirm(`Деактивировать менеджера «${manager.full_name}»?`)) {
+          return;
+        }
+
+        try {
+          await deactivateManager(managerId);
+          showSuccess("Менеджер деактивирован.");
+          await loadManagers();
+        } catch (err) {
+          showError(err.message || "Ошибка деактивации менеджера.");
+        }
+      }
     });
 
     // Мобильное меню
@@ -1885,8 +2437,14 @@
 
       try {
         const data = await login(username, password);
-        saveAuth(data.access_token, data.username, data.role);
-        showApp(data.username, data.role);
+        saveAuth(
+          data.access_token,
+          data.username,
+          data.role,
+          data.full_name,
+          data.manager_id
+        );
+        showApp(data.full_name, data.role);
         await loadOrders();
       } catch (err) {
         loginError.textContent = err.message || "Ошибка входа.";
@@ -1901,6 +2459,11 @@
       clearAuth();
       closeDetail();
       allOrders = [];
+      allManagers = [];
+      currentRole = "";
+      currentView = "orders";
+      selectedManagerFilter = "";
+      managerFilter.value = "";
       showLoginScreen();
     });
 
@@ -1909,9 +2472,10 @@
       const token = getAuthToken();
       const username = localStorage.getItem(AUTH_USERNAME_KEY);
       const role = localStorage.getItem(AUTH_ROLE_KEY);
+      const fullName = localStorage.getItem(AUTH_FULL_NAME_KEY);
 
-      if (token && username && role) {
-        showApp(username, role);
+      if (token && username && role && fullName) {
+        showApp(fullName, role);
         await loadOrders();
       } else {
         showLoginScreen();

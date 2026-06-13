@@ -1,11 +1,11 @@
 """API-эндпоинты для работы с заказами."""
 
-from typing import Annotated, List
+from typing import Annotated, Any, List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session, joinedload
 
-from app.auth_middleware import get_current_user
+from app.auth_middleware import get_current_user, get_optional_user
 from app.database import get_db
 from app.models import Order, OrderStage
 from app.notifications import send_telegram_notification
@@ -14,30 +14,83 @@ from app.schemas import OrderCreate, OrderResponse, OrderStatusUpdate
 router = APIRouter(prefix="/orders", tags=["orders"])
 
 DbSession = Annotated[Session, Depends(get_db)]
-CurrentUser = Annotated[dict[str, str], Depends(get_current_user)]
+CurrentUser = Annotated[dict[str, Any], Depends(get_current_user)]
+OptionalUser = Annotated[Optional[dict[str, Any]], Depends(get_optional_user)]
 
 
-@router.get("", response_model=List[OrderResponse])
-def list_orders(db: DbSession, current_user: CurrentUser) -> List[Order]:
-    """Получить список всех заказов с этапами."""
-    return (
-        db.query(Order)
-        .options(joinedload(Order.stages))
-        .order_by(Order.updated_at.desc())
-        .all()
+def _order_to_response(order: Order) -> OrderResponse:
+    """Преобразует модель заказа в ответ API с именем менеджера."""
+    response = OrderResponse.model_validate(order)
+    if order.manager is not None:
+        response.manager_name = order.manager.full_name
+    return response
+
+
+def _check_order_access(order: Order, current_user: Optional[dict[str, Any]]) -> None:
+    """
+    Проверяет доступ к заказу.
+
+    Без токена доступ публичный (страница отслеживания).
+    Менеджер видит только свои заказы, администратор — все.
+    """
+    if current_user is None:
+        return
+
+    role = current_user["role"]
+    if role == "admin":
+        return
+
+    if role == "manager" and order.manager_id == current_user["manager_id"]:
+        return
+
+    raise HTTPException(
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Нет доступа к этому заказу",
     )
 
 
+@router.get("", response_model=List[OrderResponse])
+def list_orders(
+    db: DbSession,
+    current_user: CurrentUser,
+    manager_id: Optional[int] = Query(
+        default=None,
+        description="Фильтр по менеджеру (только для администратора)",
+    ),
+) -> List[OrderResponse]:
+    """Получить список заказов с учётом роли пользователя."""
+    query = db.query(Order).options(joinedload(Order.manager), joinedload(Order.stages))
+
+    if current_user["role"] == "manager":
+        query = query.filter(Order.manager_id == current_user["manager_id"])
+    elif manager_id is not None:
+        query = query.filter(Order.manager_id == manager_id)
+
+    orders = query.order_by(Order.updated_at.desc()).all()
+    return [_order_to_response(order) for order in orders]
+
+
 @router.get("/{order_id}", response_model=OrderResponse)
-def get_order(order_id: int, db: DbSession) -> Order:
-    """Получить заказ по идентификатору."""
-    order = db.query(Order).filter(Order.id == order_id).first()
+def get_order(
+    order_id: int,
+    db: DbSession,
+    current_user: OptionalUser,
+) -> OrderResponse:
+    """Получить заказ по идентификатору (публично для клиентов без токена)."""
+    order = (
+        db.query(Order)
+        .options(joinedload(Order.manager), joinedload(Order.stages))
+        .filter(Order.id == order_id)
+        .first()
+    )
     if order is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Заказ не найден",
         )
-    return order
+
+    _check_order_access(order, current_user)
+    return _order_to_response(order)
 
 
 @router.post("", response_model=OrderResponse, status_code=status.HTTP_201_CREATED)
@@ -45,19 +98,31 @@ def create_order(
     order_data: OrderCreate,
     db: DbSession,
     current_user: CurrentUser,
-) -> Order:
-    """Создать новый заказ."""
+) -> OrderResponse:
+    """Создать новый заказ и привязать к текущему менеджеру."""
+    manager_id: Optional[int] = None
+    if current_user["role"] == "manager":
+        manager_id = current_user["manager_id"]
+
     order = Order(
         customer_name=order_data.customer_name,
         customer_phone=order_data.customer_phone,
         product_name=order_data.product_name,
         status=order_data.status.value,
         telegram_chat_id=order_data.telegram_chat_id,
+        manager_id=manager_id,
     )
     db.add(order)
     db.commit()
     db.refresh(order)
-    return order
+
+    order = (
+        db.query(Order)
+        .options(joinedload(Order.manager), joinedload(Order.stages))
+        .filter(Order.id == order.id)
+        .first()
+    )
+    return _order_to_response(order)
 
 
 @router.patch("/{order_id}/status", response_model=OrderResponse)
@@ -66,14 +131,21 @@ def update_order_status(
     status_update: OrderStatusUpdate,
     db: DbSession,
     current_user: CurrentUser,
-) -> Order:
+) -> OrderResponse:
     """Обновить статус заказа и зафиксировать этап в истории."""
-    order = db.query(Order).filter(Order.id == order_id).first()
+    order = (
+        db.query(Order)
+        .options(joinedload(Order.manager), joinedload(Order.stages))
+        .filter(Order.id == order_id)
+        .first()
+    )
     if order is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Заказ не найден",
         )
+
+    _check_order_access(order, current_user)
 
     order.status = status_update.status.value
 
@@ -95,4 +167,10 @@ def update_order_status(
             comment=status_update.comment,
         )
 
-    return order
+    order = (
+        db.query(Order)
+        .options(joinedload(Order.manager), joinedload(Order.stages))
+        .filter(Order.id == order.id)
+        .first()
+    )
+    return _order_to_response(order)

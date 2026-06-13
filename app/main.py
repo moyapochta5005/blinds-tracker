@@ -7,7 +7,8 @@ from fastapi.staticfiles import StaticFiles
 from sqlalchemy import inspect, text
 
 from app.database import Base, engine
-from app.routers import auth, orders, qr
+from app.create_admin import create_initial_users
+from app.routers import auth, orders, qr, users
 
 
 def _migrate_orders_table() -> None:
@@ -22,11 +23,17 @@ def _migrate_orders_table() -> None:
             conn.execute(
                 text("ALTER TABLE orders ADD COLUMN telegram_chat_id VARCHAR(50)")
             )
+    if "manager_id" not in column_names:
+        with engine.begin() as conn:
+            conn.execute(
+                text("ALTER TABLE orders ADD COLUMN manager_id INTEGER")
+            )
 
 
 # Создание таблиц при первом запуске
 Base.metadata.create_all(bind=engine)
 _migrate_orders_table()
+create_initial_users()
 
 app = FastAPI(
     title="Blinds Tracker",
@@ -43,6 +50,7 @@ app.add_middleware(
 )
 
 app.include_router(auth.router)
+app.include_router(users.router)
 app.include_router(orders.router)
 app.include_router(qr.router)
 
