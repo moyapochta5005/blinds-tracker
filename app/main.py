@@ -8,7 +8,7 @@ from sqlalchemy import inspect, text
 
 from app.database import Base, engine
 from app.create_admin import create_initial_users
-from app.routers import auth, orders, qr, users
+from app.routers import auth, integration, orders, qr, users
 
 
 def _migrate_orders_table() -> None:
@@ -27,6 +27,17 @@ def _migrate_orders_table() -> None:
         with engine.begin() as conn:
             conn.execute(
                 text("ALTER TABLE orders ADD COLUMN manager_id INTEGER")
+            )
+    if "external_id" not in column_names:
+        with engine.begin() as conn:
+            conn.execute(
+                text("ALTER TABLE orders ADD COLUMN external_id VARCHAR(100)")
+            )
+            conn.execute(
+                text(
+                    "CREATE UNIQUE INDEX IF NOT EXISTS "
+                    "ix_orders_external_id ON orders (external_id)"
+                )
             )
 
 
@@ -53,6 +64,7 @@ app.include_router(auth.router)
 app.include_router(users.router)
 app.include_router(orders.router)
 app.include_router(qr.router)
+app.include_router(integration.router)
 
 # Статические файлы фронтенда
 app.mount("/static", StaticFiles(directory="app/static"), name="static")

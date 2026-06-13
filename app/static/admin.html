@@ -1566,6 +1566,7 @@
                 <div class="detail-info-item"><span>Телефон</span><div id="detailPhone"></div></div>
                 <div class="detail-info-item"><span>Товар</span><div id="detailProduct"></div></div>
                 <div class="detail-info-item"><span>Статус</span><div id="detailStatus"></div></div>
+                <div class="detail-info-item hidden" id="detailExternalIdWrap"><span>Номер в 1С</span><div id="detailExternalId"></div></div>
                 <div class="detail-info-item admin-only hidden" id="detailManagerWrap"><span>Менеджер</span><div id="detailManager"></div></div>
               </div>
 
@@ -2080,6 +2081,14 @@
       document.getElementById("detailPhone").textContent = order.customer_phone;
       document.getElementById("detailProduct").textContent = order.product_name;
       document.getElementById("detailStatus").innerHTML = renderStatusBadge(order.status);
+
+      const detailExternalIdWrap = document.getElementById("detailExternalIdWrap");
+      if (order.external_id) {
+        detailExternalIdWrap.classList.remove("hidden");
+        document.getElementById("detailExternalId").textContent = order.external_id;
+      } else {
+        detailExternalIdWrap.classList.add("hidden");
+      }
 
       const detailManagerWrap = document.getElementById("detailManagerWrap");
       if (currentRole === "admin") {

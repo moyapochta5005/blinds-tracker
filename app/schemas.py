@@ -124,6 +124,7 @@ class OrderResponse(OrderBase):
     """Схема ответа с данными заказа."""
 
     id: int
+    external_id: Optional[str] = None
     status: OrderStatus
     manager_id: Optional[int] = None
     manager_name: Optional[str] = None
@@ -143,3 +144,45 @@ class OrderResponse(OrderBase):
         """Заполняет URL QR-кода на основе идентификатора заказа."""
         self.qr_url = f"/orders/{self.id}/qr"
         return self
+
+
+class IntegrationOrderCreate(BaseModel):
+    """Схема создания заказа из 1С."""
+
+    external_id: str = Field(..., min_length=1, max_length=100)
+    customer_name: str
+    customer_phone: str = Field(
+        ...,
+        pattern=r"^\+7\d{10}$",
+        description="Телефон клиента в формате +7XXXXXXXXXX",
+    )
+    product_name: str
+    manager_username: Optional[str] = None
+    comment: Optional[str] = None
+
+
+class IntegrationOrderCreateResponse(BaseModel):
+    """Ответ после создания заказа из 1С."""
+
+    id: int
+    tracking_url: str
+    qr_url: str
+
+
+class IntegrationOrderStatusUpdate(BaseModel):
+    """Схема обновления статуса заказа из 1С."""
+
+    status: OrderStatus
+    comment: Optional[str] = None
+
+
+class IntegrationOrderStatusResponse(BaseModel):
+    """Статус заказа для интеграции с 1С."""
+
+    id: int
+    external_id: str
+    status: OrderStatus
+    updated_at: datetime
+    tracking_url: str
+    qr_url: str
+    stages: List[OrderStageResponse] = []
