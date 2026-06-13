@@ -21,6 +21,21 @@ class User(Base):
     is_active = Column(Boolean, default=True, nullable=False)
 
     orders = relationship("Order", back_populates="manager")
+    installers = relationship("Installer", back_populates="manager")
+
+
+class Installer(Base):
+    __tablename__ = "installers"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    phone = Column(String, nullable=True)
+    manager_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    manager = relationship("User", back_populates="installers")
+    orders = relationship("Order", back_populates="installer")
 
 
 class Order(Base):
@@ -36,6 +51,7 @@ class Order(Base):
     status = Column(String(50), nullable=False, default="new")
     telegram_chat_id = Column(String(50), nullable=True)
     manager_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
+    installer_id = Column(Integer, ForeignKey("installers.id"), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(
         DateTime,
@@ -45,6 +61,7 @@ class Order(Base):
     )
 
     manager = relationship("User", back_populates="orders")
+    installer = relationship("Installer", back_populates="orders")
     stages = relationship(
         "OrderStage",
         back_populates="order",

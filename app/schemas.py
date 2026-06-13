@@ -55,6 +55,31 @@ class UserResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class InstallerBase(BaseModel):
+    name: str
+    phone: Optional[str] = None
+
+
+class InstallerCreate(InstallerBase):
+    pass
+
+
+class InstallerUpdate(BaseModel):
+    name: Optional[str] = None
+    phone: Optional[str] = None
+    is_active: Optional[bool] = None
+
+
+class InstallerOut(InstallerBase):
+    id: int
+    manager_id: int
+    is_active: bool
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
 class OrderStatus(str, Enum):
     """Допустимые статусы заказа."""
 
@@ -111,6 +136,7 @@ class OrderCreate(OrderBase):
         default=None,
         description="ID менеджера (только для администратора)",
     )
+    installer_id: Optional[int] = None
 
 
 class OrderStatusUpdate(BaseModel):
@@ -128,6 +154,7 @@ class OrderResponse(OrderBase):
     status: OrderStatus
     manager_id: Optional[int] = None
     manager_name: Optional[str] = None
+    installer: Optional[InstallerOut] = None
     created_at: datetime
     updated_at: datetime
     stages: List[OrderStageResponse] = []

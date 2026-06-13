@@ -8,7 +8,8 @@ from sqlalchemy import inspect, text
 
 from app.database import Base, engine
 from app.create_admin import create_initial_users
-from app.routers import auth, integration, orders, qr, users
+from app.migrate import run_migrations
+from app.routers import auth, installers, integration, orders, qr, users
 
 
 def _migrate_orders_table() -> None:
@@ -51,6 +52,12 @@ app = FastAPI(
     description="Сервис отслеживания заказов жалюзи и штор",
 )
 
+
+@app.on_event("startup")
+async def startup_event() -> None:
+    run_migrations()
+
+
 # CORS: разрешаем запросы к API с любого источника (для фронтенда)
 app.add_middleware(
     CORSMiddleware,
@@ -62,6 +69,7 @@ app.add_middleware(
 
 app.include_router(auth.router)
 app.include_router(users.router)
+app.include_router(installers.router)
 app.include_router(orders.router)
 app.include_router(qr.router)
 app.include_router(integration.router)
