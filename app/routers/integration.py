@@ -9,7 +9,6 @@ from sqlalchemy.orm import Session, joinedload
 from app.database import get_db
 from app.models import Order, OrderStage, User
 from app.notifications import send_telegram_notification
-from app.routers.qr import TRACK_PAGE_BASE_URL
 from app.schemas import (
     IntegrationOrderCreate,
     IntegrationOrderCreateResponse,
@@ -26,6 +25,7 @@ router = APIRouter(
 DbSession = Annotated[Session, Depends(get_db)]
 
 INTEGRATION_API_KEY: str = os.getenv("INTEGRATION_API_KEY", "")
+BASE_URL: str = os.getenv("BASE_URL", "https://track.tkani-05.ru")
 
 
 def verify_integration_api_key(
@@ -49,7 +49,7 @@ ApiKeyAuth = Annotated[None, Depends(verify_integration_api_key)]
 
 def _build_tracking_url(order_id: int) -> str:
     """Формирует URL страницы отслеживания заказа."""
-    return f"{TRACK_PAGE_BASE_URL}?order={order_id}"
+    return f"{BASE_URL}/static/track.html?order={order_id}"
 
 
 def _build_qr_url(order_id: int) -> str:
