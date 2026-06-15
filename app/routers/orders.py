@@ -91,6 +91,8 @@ def list_orders(
 
     if current_user["role"] == "manager":
         query = query.filter(Order.manager_id == current_user["manager_id"])
+    elif current_user["role"] == "dealer":
+        query = query.filter(Order.dealer_id == current_user["manager_id"])
     elif manager_id is not None:
         query = query.filter(Order.manager_id == manager_id)
 
@@ -165,6 +167,12 @@ def create_order(
             )
         manager_id = order_data.manager_id
 
+    order_dealer_id: Optional[int] = None
+    if order_data.dealer_id is not None:
+        order_dealer_id = order_data.dealer_id
+    elif order_data.installer_id is not None:
+        order_dealer_id = order_data.installer_id
+
     order = Order(
         public_token=secrets.token_hex(16),
         customer_name=order_data.customer_name,
@@ -173,6 +181,7 @@ def create_order(
         status=order_data.status.value,
         telegram_chat_id=order_data.telegram_chat_id,
         manager_id=manager_id,
+        dealer_id=order_dealer_id,
     )
     db.add(order)
     db.flush()

@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, Header, HTTPException, status
 from sqlalchemy.orm import Session, joinedload
 
 from app.database import get_db
-from app.models import Installer, Order, OrderStage
+from app.models import Installer, Order, OrderStage, User
 from app.notifications import send_telegram_notification
 from app.schemas import (
     IntegrationOrderCreate,
@@ -102,6 +102,39 @@ def _resolve_installer(
     return None
 
 
+def _resolve_dealer(
+    db: Session,
+    dealer_id: Optional[int],
+    dealer_phone: Optional[str],
+) -> Optional[User]:
+    """Находит активного дилера по ID или телефону."""
+    if dealer_id is not None:
+        dealer = (
+            db.query(User)
+            .filter(
+                User.id == dealer_id,
+                User.role == "dealer",
+                User.is_active.is_(True),
+            )
+            .first()
+        )
+        return dealer
+
+    if dealer_phone is not None:
+        dealer = (
+            db.query(User)
+            .filter(
+                User.phone == dealer_phone,
+                User.role == "dealer",
+                User.is_active.is_(True),
+            )
+            .first()
+        )
+        return dealer
+
+    return None
+
+
 def _get_order_by_external_id(db: Session, external_id: str) -> Order:
     """Возвращает заказ по external_id или выбрасывает 404."""
     order = (
@@ -145,11 +178,19 @@ def create_order_from_1c(
         order_data.installer_id,
         order_data.installer_phone,
     )
+    dealer = _resolve_dealer(
+        db,
+        order_data.dealer_id,
+        order_data.dealer_phone,
+    )
     installer_id: Optional[int] = None
+    order_dealer_id: Optional[int] = None
     manager_id: Optional[int] = None
     if installer is not None:
         installer_id = installer.id
         manager_id = installer.manager_id
+    if dealer is not None:
+        order_dealer_id = dealer.id
 
     order = Order(
         external_id=order_data.external_id,
@@ -160,6 +201,7 @@ def create_order_from_1c(
         status=OrderStatus.NEW.value,
         manager_id=manager_id,
         installer_id=installer_id,
+        dealer_id=order_dealer_id,
     )
     db.add(order)
     db.flush()

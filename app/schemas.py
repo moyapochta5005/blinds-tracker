@@ -149,6 +149,7 @@ class OrderCreate(OrderBase):
         description="ID менеджера (только для администратора)",
     )
     installer_id: Optional[int] = None
+    dealer_id: Optional[int] = None
 
 
 class OrderStatusUpdate(BaseModel):
@@ -207,6 +208,14 @@ class IntegrationOrderCreate(BaseModel):
         default=None,
         description="Телефон установщика для поиска (если ID неизвестен)",
     )
+    dealer_id: Optional[int] = Field(
+        default=None,
+        description="ID дилера в трекере (приоритетный способ)",
+    )
+    dealer_phone: Optional[str] = Field(
+        default=None,
+        description="Телефон дилера для поиска (если ID неизвестен)",
+    )
     comment: Optional[str] = None
 
 
@@ -256,6 +265,7 @@ class InstallerOrderCount(BaseModel):
     """Количество заказов по установщику."""
 
     installer_id: int
+    dealer_id: Optional[int] = None
     installer_name: str
     count: int
 
