@@ -134,6 +134,12 @@ class OrderStatusUpdate(BaseModel):
     comment: Optional[str] = None
 
 
+class AssignCourierRequest(BaseModel):
+    """Схема назначения курьера на заказ."""
+
+    courier_id: int
+
+
 class OrderResponse(OrderBase):
     """Схема ответа с данными заказа."""
 

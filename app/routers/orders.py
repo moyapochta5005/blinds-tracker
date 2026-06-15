@@ -12,7 +12,7 @@ from app.auth_middleware import get_current_user, get_optional_user
 from app.database import get_db
 from app.models import Order, OrderStage, User
 from app.notifications import send_telegram_notification
-from app.schemas import OrderCreate, OrderResponse, OrderStatus, OrderStatusUpdate
+from app.schemas import AssignCourierRequest, OrderCreate, OrderResponse, OrderStatus, OrderStatusUpdate
 
 
 class OrderTrackStageResponse(BaseModel):
@@ -243,6 +243,56 @@ def update_order_status(
             new_status=status_update.status.value,
             comment=status_update.comment,
         )
+
+    order = (
+        db.query(Order)
+        .options(joinedload(Order.manager), joinedload(Order.stages))
+        .filter(Order.id == order.id)
+        .first()
+    )
+    return _order_to_response(order)
+
+
+@router.patch("/{order_id}/assign-courier", response_model=OrderResponse)
+def assign_courier(
+    order_id: int,
+    body: AssignCourierRequest,
+    db: DbSession,
+    current_user: CurrentUser,
+) -> OrderResponse:
+    """Назначить курьера на заказ."""
+    if current_user["role"] not in ("admin", "manager"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Доступ только для администратора и менеджера",
+        )
+
+    order = (
+        db.query(Order)
+        .options(joinedload(Order.manager), joinedload(Order.stages))
+        .filter(Order.id == order_id)
+        .first()
+    )
+    if order is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Заказ не найден",
+        )
+
+    courier = (
+        db.query(User)
+        .filter(User.id == body.courier_id, User.role == "courier")
+        .first()
+    )
+    if courier is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Курьер не найден",
+        )
+
+    order.courier_id = body.courier_id
+    db.commit()
+    db.refresh(order)
 
     order = (
         db.query(Order)
