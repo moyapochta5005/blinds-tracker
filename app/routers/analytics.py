@@ -9,11 +9,11 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.auth_middleware import get_current_user
 from app.database import get_db
-from app.models import Installer, Order, User
+from app.models import Order, User
 from app.schemas import (
     DashboardResponse,
     DayOrderCount,
-    InstallerOrderCount,
+    DealerOrderCount,
     ManagerOrderCount,
 )
 
@@ -150,30 +150,31 @@ def get_dashboard(
         DayOrderCount(date=str(day), count=count) for day, count in day_rows
     ]
 
-    installer_query = (
-        db.query(Installer.id, Installer.name, func.count(Order.id))
-        .join(Order, Order.installer_id == Installer.id)
+    dealer_query = (
+        db.query(User.id, User.full_name, func.count(Order.id))
+        .join(Order, Order.dealer_id == User.id)
+        .filter(User.role == "dealer")
     )
     if current_user["role"] == "manager":
-        installer_query = installer_query.filter(
+        dealer_query = dealer_query.filter(
             Order.manager_id == current_user["manager_id"]
         )
     if period_start is not None:
-        installer_query = installer_query.filter(Order.created_at >= period_start)
-    installer_rows = (
-        installer_query
-        .group_by(Installer.id, Installer.name)
+        dealer_query = dealer_query.filter(Order.created_at >= period_start)
+    dealer_rows = (
+        dealer_query
+        .group_by(User.id, User.full_name)
         .order_by(func.count(Order.id).desc())
         .limit(10)
         .all()
     )
-    top_installers = [
-        InstallerOrderCount(
-            installer_id=installer_id,
-            installer_name=installer_name,
+    top_dealers = [
+        DealerOrderCount(
+            dealer_id=dealer_id,
+            dealer_name=dealer_name,
             count=count,
         )
-        for installer_id, installer_name, count in installer_rows
+        for dealer_id, dealer_name, count in dealer_rows
     ]
 
     return DashboardResponse(
@@ -182,5 +183,5 @@ def get_dashboard(
         orders_by_manager=orders_by_manager,
         average_completion_days=average_completion_days,
         orders_by_day=orders_by_day,
-        top_installers=top_installers,
+        top_dealers=top_dealers,
     )

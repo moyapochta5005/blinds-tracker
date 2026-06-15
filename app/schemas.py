@@ -67,31 +67,6 @@ class UserResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-class InstallerBase(BaseModel):
-    name: str
-    phone: Optional[str] = None
-
-
-class InstallerCreate(InstallerBase):
-    pass
-
-
-class InstallerUpdate(BaseModel):
-    name: Optional[str] = None
-    phone: Optional[str] = None
-    is_active: Optional[bool] = None
-
-
-class InstallerOut(InstallerBase):
-    id: int
-    manager_id: int
-    is_active: bool
-    created_at: datetime
-
-    class Config:
-        from_attributes = True
-
-
 class OrderStatus(str, Enum):
     """Допустимые статусы заказа."""
 
@@ -148,7 +123,6 @@ class OrderCreate(OrderBase):
         default=None,
         description="ID менеджера (только для администратора)",
     )
-    installer_id: Optional[int] = None
     dealer_id: Optional[int] = None
 
 
@@ -170,7 +144,6 @@ class OrderResponse(OrderBase):
     manager_name: Optional[str] = None
     dealer_id: Optional[int] = None
     courier_id: Optional[int] = None
-    installer: Optional[InstallerOut] = None
     created_at: datetime
     updated_at: datetime
     stages: List[OrderStageResponse] = []
@@ -261,12 +234,11 @@ class DayOrderCount(BaseModel):
     count: int
 
 
-class InstallerOrderCount(BaseModel):
-    """Количество заказов по установщику."""
+class DealerOrderCount(BaseModel):
+    """Количество заказов по дилеру."""
 
-    installer_id: int
-    dealer_id: Optional[int] = None
-    installer_name: str
+    dealer_id: int
+    dealer_name: str
     count: int
 
 
@@ -278,4 +250,4 @@ class DashboardResponse(BaseModel):
     orders_by_manager: List[ManagerOrderCount]
     average_completion_days: Optional[float] = None
     orders_by_day: List[DayOrderCount]
-    top_installers: List[InstallerOrderCount]
+    top_dealers: List[DealerOrderCount]

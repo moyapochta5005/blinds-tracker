@@ -8,7 +8,7 @@ from fastapi import APIRouter, Depends, Header, HTTPException, status
 from sqlalchemy.orm import Session, joinedload
 
 from app.database import get_db
-from app.models import Installer, Order, OrderStage, User
+from app.models import Order, OrderStage, User
 from app.notifications import send_telegram_notification
 from app.schemas import (
     IntegrationOrderCreate,
@@ -75,29 +75,31 @@ def _resolve_installer(
     db: Session,
     installer_id: Optional[int],
     installer_phone: Optional[str],
-) -> Optional[Installer]:
-    """Находит активного установщика по ID или телефону."""
+) -> Optional[User]:
+    """Находит активного дилера по ID или телефону (legacy installer_id/installer_phone)."""
     if installer_id is not None:
-        installer = (
-            db.query(Installer)
+        dealer = (
+            db.query(User)
             .filter(
-                Installer.id == installer_id,
-                Installer.is_active.is_(True),
+                User.id == installer_id,
+                User.role == "dealer",
+                User.is_active.is_(True),
             )
             .first()
         )
-        return installer
+        return dealer
 
     if installer_phone is not None:
-        installer = (
-            db.query(Installer)
+        dealer = (
+            db.query(User)
             .filter(
-                Installer.phone == installer_phone,
-                Installer.is_active.is_(True),
+                User.phone == installer_phone,
+                User.role == "dealer",
+                User.is_active.is_(True),
             )
             .first()
         )
-        return installer
+        return dealer
 
     return None
 
@@ -173,7 +175,7 @@ def create_order_from_1c(
             detail=f"Заказ с external_id «{order_data.external_id}» уже существует",
         )
 
-    installer = _resolve_installer(
+    dealer_from_installer = _resolve_installer(
         db,
         order_data.installer_id,
         order_data.installer_phone,
@@ -183,14 +185,15 @@ def create_order_from_1c(
         order_data.dealer_id,
         order_data.dealer_phone,
     )
-    installer_id: Optional[int] = None
     order_dealer_id: Optional[int] = None
     manager_id: Optional[int] = None
-    if installer is not None:
-        installer_id = installer.id
-        manager_id = installer.manager_id
+    if dealer_from_installer is not None:
+        order_dealer_id = dealer_from_installer.id
+        manager_id = dealer_from_installer.manager_id
     if dealer is not None:
         order_dealer_id = dealer.id
+        if manager_id is None:
+            manager_id = dealer.manager_id
 
     order = Order(
         external_id=order_data.external_id,
@@ -200,7 +203,6 @@ def create_order_from_1c(
         product_name=order_data.product_name,
         status=OrderStatus.NEW.value,
         manager_id=manager_id,
-        installer_id=installer_id,
         dealer_id=order_dealer_id,
     )
     db.add(order)

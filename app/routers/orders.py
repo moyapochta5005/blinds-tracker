@@ -167,11 +167,7 @@ def create_order(
             )
         manager_id = order_data.manager_id
 
-    order_dealer_id: Optional[int] = None
-    if order_data.dealer_id is not None:
-        order_dealer_id = order_data.dealer_id
-    elif order_data.installer_id is not None:
-        order_dealer_id = order_data.installer_id
+    order_dealer_id: Optional[int] = order_data.dealer_id
 
     order = Order(
         public_token=secrets.token_hex(16),
