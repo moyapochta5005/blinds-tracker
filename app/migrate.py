@@ -19,6 +19,18 @@ ADD_INSTALLER_ID_COLUMN: Final[str] = """
 ALTER TABLE orders ADD COLUMN installer_id INTEGER REFERENCES installers(id)
 """
 
+ADD_PUBLIC_TOKEN_COLUMN: Final[str] = """
+ALTER TABLE orders ADD COLUMN public_token TEXT
+"""
+
+BACKFILL_PUBLIC_TOKEN: Final[str] = """
+UPDATE orders SET public_token = lower(hex(randomblob(16))) WHERE public_token IS NULL
+"""
+
+CREATE_PUBLIC_TOKEN_INDEX: Final[str] = """
+CREATE UNIQUE INDEX IF NOT EXISTS ix_orders_public_token ON orders(public_token)
+"""
+
 
 def get_database_path() -> str:
     """Возвращает путь к файлу SQLite из DATABASE_URL или значение по умолчанию."""
@@ -50,6 +62,18 @@ def run_migrations() -> None:
             print("Колонка installer_id добавлена в таблицу orders.")
         else:
             print("Колонка installer_id уже существует в таблице orders.")
+
+        if not column_exists(cursor, "orders", "public_token"):
+            cursor.execute(ADD_PUBLIC_TOKEN_COLUMN)
+            print("Колонка public_token добавлена в таблицу orders.")
+        else:
+            print("Колонка public_token уже существует в таблице orders.")
+
+        cursor.execute(BACKFILL_PUBLIC_TOKEN)
+        print("public_token заполнен для заказов без токена.")
+
+        cursor.execute(CREATE_PUBLIC_TOKEN_INDEX)
+        print("Уникальный индекс ix_orders_public_token создан или уже существует.")
 
         connection.commit()
     finally:

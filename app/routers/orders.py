@@ -74,9 +74,9 @@ def list_orders(
 def get_order(
     order_id: int,
     db: DbSession,
-    current_user: OptionalUser,
+    current_user: CurrentUser,
 ) -> OrderResponse:
-    """Получить заказ по идентификатору (публично для клиентов без токена)."""
+    """Получить заказ по идентификатору."""
     order = (
         db.query(Order)
         .options(joinedload(Order.manager), joinedload(Order.stages))

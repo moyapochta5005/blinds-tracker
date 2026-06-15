@@ -1266,6 +1266,196 @@
       display: block;
     }
 
+    /* ——— Панель аналитики ——— */
+    .analytics-panel {
+      display: none;
+    }
+
+    .analytics-panel.visible {
+      display: block;
+    }
+
+    .analytics-period {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .analytics-period-btn {
+      font-family: inherit;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      padding: 8px 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+
+    .analytics-period-btn:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .analytics-period-btn.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    .analytics-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .analytics-kpi {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px;
+    }
+
+    .analytics-kpi-label {
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .analytics-kpi-value {
+      font-size: 1.75rem;
+      font-weight: 700;
+      line-height: 1.2;
+      color: var(--text);
+    }
+
+    .analytics-kpi-sub {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    .analytics-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+    }
+
+    @media (max-width: 900px) {
+      .analytics-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .analytics-card h3 {
+      font-size: 0.9375rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .bar-chart-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .bar-chart-label {
+      flex: 0 0 120px;
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+    }
+
+    .bar-chart-track {
+      flex: 1;
+      height: 24px;
+      background: var(--bg);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .bar-chart-bar {
+      height: 100%;
+      min-width: 2px;
+      border-radius: 6px;
+      background: var(--primary);
+      transition: width 0.3s ease;
+    }
+
+    .bar-chart-bar.status-new { background: var(--primary); }
+    .bar-chart-bar.status-in_production { background: var(--warning); }
+    .bar-chart-bar.status-ready { background: #6366f1; }
+    .bar-chart-bar.status-handed_to_courier { background: #0ea5e9; }
+    .bar-chart-bar.status-in_transit { background: #8b5cf6; }
+    .bar-chart-bar.status-delivered { background: var(--success); }
+
+    .bar-chart-value {
+      flex: 0 0 36px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-align: right;
+    }
+
+    .day-chart {
+      display: flex;
+      align-items: flex-end;
+      gap: 6px;
+      height: 180px;
+      padding-top: 8px;
+      overflow-x: auto;
+    }
+
+    .day-chart-col {
+      flex: 1;
+      min-width: 28px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .day-chart-bar-wrap {
+      width: 100%;
+      height: 140px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .day-chart-bar {
+      width: 100%;
+      max-width: 32px;
+      min-height: 2px;
+      background: var(--primary);
+      border-radius: 4px 4px 0 0;
+      transition: height 0.3s ease;
+    }
+
+    .day-chart-label {
+      font-size: 0.625rem;
+      color: var(--text-muted);
+      text-align: center;
+      line-height: 1.2;
+      max-width: 40px;
+    }
+
+    .day-chart-count {
+      font-size: 0.6875rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .analytics-empty {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      padding: 12px 0;
+    }
+
     .managers-grid {
       display: grid;
       grid-template-columns: 1fr 1.2fr;
@@ -1497,6 +1687,10 @@
         <button class="nav-item" id="navInstallers" data-view="installers" type="button">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
           Установщики
+        </button>
+        <button class="nav-item" id="navAnalytics" data-view="analytics" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+          Аналитика
         </button>
 
         <div class="nav-section-title admin-only hidden" id="adminNavSection" style="margin-top: 12px;">Администрирование</div>
@@ -1747,6 +1941,78 @@
             </div>
           </div>
         </section>
+
+        <!-- Дашборд аналитики -->
+        <section class="analytics-panel" id="analyticsPanel">
+          <div class="analytics-period" id="analyticsPeriod" role="tablist" aria-label="Период">
+            <button class="analytics-period-btn" type="button" data-period="day">День</button>
+            <button class="analytics-period-btn" type="button" data-period="week">Неделя</button>
+            <button class="analytics-period-btn active" type="button" data-period="month">Месяц</button>
+            <button class="analytics-period-btn" type="button" data-period="all">Всё время</button>
+          </div>
+
+          <div class="loading-state" id="analyticsLoading" style="display: none;">
+            <div class="spinner"></div>
+            <div>Загрузка аналитики…</div>
+          </div>
+
+          <div id="analyticsContent">
+            <div class="analytics-kpi-grid">
+              <div class="analytics-kpi">
+                <div class="analytics-kpi-label">Всего заказов</div>
+                <div class="analytics-kpi-value" id="kpiTotalOrders">—</div>
+                <div class="analytics-kpi-sub" id="kpiPeriodHint">в выбранном периоде</div>
+              </div>
+              <div class="analytics-kpi">
+                <div class="analytics-kpi-label">Среднее время выполнения</div>
+                <div class="analytics-kpi-value" id="kpiAvgDays">—</div>
+                <div class="analytics-kpi-sub">дней до статуса «Доставлен»</div>
+              </div>
+            </div>
+
+            <div class="analytics-grid">
+              <div class="panel-card analytics-card">
+                <h3>Заказы по статусам</h3>
+                <div id="chartByStatus"></div>
+              </div>
+
+              <div class="panel-card analytics-card">
+                <h3>Заказы по дням</h3>
+                <div id="chartByDay"></div>
+              </div>
+
+              <div class="panel-card analytics-card admin-only hidden" id="analyticsManagersCard">
+                <h3>Заказы по менеджерам</h3>
+                <div class="managers-table-wrap">
+                  <table class="managers-table" id="analyticsManagersTable">
+                    <thead>
+                      <tr>
+                        <th>Менеджер</th>
+                        <th>Заказов</th>
+                      </tr>
+                    </thead>
+                    <tbody id="analyticsManagersBody"></tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div class="panel-card analytics-card">
+                <h3>Топ установщиков</h3>
+                <div class="managers-table-wrap">
+                  <table class="managers-table" id="analyticsInstallersTable">
+                    <thead>
+                      <tr>
+                        <th>Установщик</th>
+                        <th>Заказов</th>
+                      </tr>
+                    </thead>
+                    <tbody id="analyticsInstallersBody"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
     </div>
   </div>
@@ -1811,8 +2077,28 @@
       new: "Принят",
       in_production: "В производстве",
       ready: "Готов",
+      handed_to_courier: "Передан курьеру",
+      in_transit: "В пути",
       delivered: "Доставлен",
       cancelled: "Отменён",
+    };
+
+    /** Статусы для дашборда аналитики (порядок отображения) */
+    const ANALYTICS_STATUSES = [
+      "new",
+      "in_production",
+      "ready",
+      "handed_to_courier",
+      "in_transit",
+      "delivered",
+    ];
+
+    /** Подписи периодов аналитики */
+    const ANALYTICS_PERIOD_LABELS = {
+      day: "сегодня",
+      week: "за 7 дней",
+      month: "за 30 дней",
+      all: "за всё время",
     };
 
     /** Ключи localStorage для авторизации */
@@ -1864,6 +2150,11 @@
     const managerFilter = document.getElementById("managerFilter");
     const navManagers = document.getElementById("navManagers");
     const navInstallers = document.getElementById("navInstallers");
+    const navAnalytics = document.getElementById("navAnalytics");
+    const analyticsPanel = document.getElementById("analyticsPanel");
+    const analyticsLoading = document.getElementById("analyticsLoading");
+    const analyticsContent = document.getElementById("analyticsContent");
+    const analyticsPeriod = document.getElementById("analyticsPeriod");
     const createManagerForm = document.getElementById("createManagerForm");
     const managersTableBody = document.getElementById("managersTableBody");
     const managersLoading = document.getElementById("managersLoading");
@@ -1886,6 +2177,7 @@
     let editingInstallerId = null;
     let currentFilter = "all";
     let currentView = "orders";
+    let currentAnalyticsPeriod = "month";
     let currentRole = "";
     let selectedOrderId = null;
     let selectedManagerFilter = "";
@@ -2005,16 +2297,19 @@
       const isOrders = view === "orders";
       const isManagers = view === "managers";
       const isInstallers = view === "installers";
+      const isAnalytics = view === "analytics";
 
       ordersView.classList.toggle("hidden", !isOrders);
       managersPanel.classList.toggle("visible", isManagers);
       installersPanel.classList.toggle("visible", isInstallers);
+      analyticsPanel.classList.toggle("visible", isAnalytics);
 
       document.querySelectorAll(".nav-item[data-filter]").forEach((item) => {
         item.classList.toggle("active", isOrders && item.dataset.filter === currentFilter);
       });
       navManagers.classList.toggle("active", isManagers);
       navInstallers.classList.toggle("active", isInstallers);
+      navAnalytics.classList.toggle("active", isAnalytics);
 
       if (isOrders) {
         document.getElementById("pageTitle").textContent =
@@ -2033,6 +2328,12 @@
         document.getElementById("pageTitle").textContent = "Установщики";
         document.getElementById("pageSubtitle").textContent =
           "Добавление и редактирование установщиков";
+        managerFilterWrap.classList.remove("visible");
+        btnNewOrder.classList.add("hidden");
+      } else if (isAnalytics) {
+        document.getElementById("pageTitle").textContent = "Аналитика";
+        document.getElementById("pageSubtitle").textContent =
+          "Сводка по заказам и эффективности";
         managerFilterWrap.classList.remove("visible");
         btnNewOrder.classList.add("hidden");
       }
@@ -2499,6 +2800,169 @@
     }
 
     /**
+     * Загружает данные дашборда аналитики.
+     */
+    async function fetchAnalytics(period) {
+      const response = await apiFetch(
+        `/analytics/dashboard?period=${encodeURIComponent(period)}`
+      );
+
+      if (!response.ok) {
+        throw new Error("Не удалось загрузить аналитику.");
+      }
+
+      return response.json();
+    }
+
+    /**
+     * Рендерит столбчатую диаграмму по статусам.
+     */
+    function renderStatusChart(ordersByStatus) {
+      const container = document.getElementById("chartByStatus");
+      const maxCount = Math.max(
+        ...ANALYTICS_STATUSES.map((status) => ordersByStatus[status] || 0),
+        1
+      );
+
+      container.innerHTML = ANALYTICS_STATUSES
+        .map((status) => {
+          const count = ordersByStatus[status] || 0;
+          const width = Math.round((count / maxCount) * 100);
+          return `
+            <div class="bar-chart-row">
+              <div class="bar-chart-label">${escapeHtml(STATUS_LABELS[status] || status)}</div>
+              <div class="bar-chart-track">
+                <div class="bar-chart-bar status-${status}" style="width: ${width}%"></div>
+              </div>
+              <div class="bar-chart-value">${count}</div>
+            </div>
+          `;
+        })
+        .join("");
+    }
+
+    /**
+     * Рендерит диаграмму заказов по дням.
+     */
+    function renderDayChart(ordersByDay) {
+      const container = document.getElementById("chartByDay");
+
+      if (!ordersByDay.length) {
+        container.innerHTML = '<div class="analytics-empty">Нет заказов в выбранном периоде</div>';
+        return;
+      }
+
+      const maxCount = Math.max(...ordersByDay.map((item) => item.count), 1);
+
+      container.innerHTML = `
+        <div class="day-chart">
+          ${ordersByDay
+            .map((item) => {
+              const height = Math.round((item.count / maxCount) * 100);
+              const parts = item.date.split("-");
+              const label = parts.length === 3 ? `${parts[2]}.${parts[1]}` : item.date;
+              return `
+                <div class="day-chart-col">
+                  <div class="day-chart-count">${item.count}</div>
+                  <div class="day-chart-bar-wrap">
+                    <div class="day-chart-bar" style="height: ${height}%"></div>
+                  </div>
+                  <div class="day-chart-label">${label}</div>
+                </div>
+              `;
+            })
+            .join("")}
+        </div>
+      `;
+    }
+
+    /**
+     * Рендерит таблицу менеджеров в аналитике (только для админа).
+     */
+    function renderAnalyticsManagersTable(rows) {
+      const tbody = document.getElementById("analyticsManagersBody");
+      tbody.innerHTML = "";
+
+      if (!rows.length) {
+        tbody.innerHTML =
+          '<tr><td colspan="2" style="color: var(--text-muted);">Нет данных</td></tr>';
+        return;
+      }
+
+      for (const row of rows) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${escapeHtml(row.manager_name)}</td>
+          <td>${row.count}</td>
+        `;
+        tbody.appendChild(tr);
+      }
+    }
+
+    /**
+     * Рендерит таблицу топ установщиков.
+     */
+    function renderAnalyticsInstallersTable(rows) {
+      const tbody = document.getElementById("analyticsInstallersBody");
+      tbody.innerHTML = "";
+
+      if (!rows.length) {
+        tbody.innerHTML =
+          '<tr><td colspan="2" style="color: var(--text-muted);">Нет данных</td></tr>';
+        return;
+      }
+
+      for (const row of rows) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${escapeHtml(row.installer_name)}</td>
+          <td>${row.count}</td>
+        `;
+        tbody.appendChild(tr);
+      }
+    }
+
+    /**
+     * Обновляет UI дашборда аналитики.
+     */
+    function renderAnalytics(data) {
+      document.getElementById("kpiTotalOrders").textContent = data.total_orders;
+      document.getElementById("kpiPeriodHint").textContent =
+        ANALYTICS_PERIOD_LABELS[currentAnalyticsPeriod] || "в выбранном периоде";
+
+      const avgEl = document.getElementById("kpiAvgDays");
+      if (data.average_completion_days === null || data.average_completion_days === undefined) {
+        avgEl.textContent = "—";
+      } else {
+        avgEl.textContent = `${data.average_completion_days} дн.`;
+      }
+
+      renderStatusChart(data.orders_by_status);
+      renderDayChart(data.orders_by_day);
+      renderAnalyticsManagersTable(data.orders_by_manager || []);
+      renderAnalyticsInstallersTable(data.top_installers || []);
+    }
+
+    /**
+     * Загружает и отображает аналитику.
+     */
+    async function loadAnalytics() {
+      hideAlerts();
+      analyticsLoading.style.display = "block";
+      analyticsContent.style.opacity = "0.5";
+
+      try {
+        const data = await fetchAnalytics(currentAnalyticsPeriod);
+        renderAnalytics(data);
+      } catch (err) {
+        showError(err.message || "Ошибка загрузки аналитики.");
+      } finally {
+        analyticsLoading.style.display = "none";
+        analyticsContent.style.opacity = "1";
+      }
+    }
+
+    /**
      * Показывает форму добавления или редактирования установщика.
      */
     function showInstallerForm(installerId) {
@@ -2913,7 +3377,17 @@
 
     /** ——— Обработчики событий ——— */
 
-    document.getElementById("btnRefresh").addEventListener("click", loadOrders);
+    document.getElementById("btnRefresh").addEventListener("click", async () => {
+      if (currentView === "analytics") {
+        await loadAnalytics();
+      } else if (currentView === "installers") {
+        await loadInstallers();
+      } else if (currentView === "managers") {
+        await loadManagers();
+      } else {
+        await loadOrders();
+      }
+    });
     document.getElementById("btnCloseDetail").addEventListener("click", closeDetail);
 
     btnNewOrder.addEventListener("click", openNewOrderModal);
@@ -3050,6 +3524,29 @@
       switchView("installers");
       closeSidebar();
       await loadInstallers();
+    });
+
+    navAnalytics.addEventListener("click", async () => {
+      switchView("analytics");
+      closeSidebar();
+      await loadAnalytics();
+    });
+
+    analyticsPeriod.addEventListener("click", async (event) => {
+      const button = event.target.closest(".analytics-period-btn");
+      if (!button) return;
+
+      const period = button.dataset.period;
+      if (!period || period === currentAnalyticsPeriod) return;
+
+      currentAnalyticsPeriod = period;
+      analyticsPeriod.querySelectorAll(".analytics-period-btn").forEach((btn) => {
+        btn.classList.toggle("active", btn.dataset.period === period);
+      });
+
+      if (currentView === "analytics") {
+        await loadAnalytics();
+      }
     });
 
     installersTbody.addEventListener("click", async (event) => {

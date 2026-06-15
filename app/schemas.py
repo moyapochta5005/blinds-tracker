@@ -151,6 +151,7 @@ class OrderResponse(OrderBase):
 
     id: int
     external_id: Optional[str] = None
+    public_token: Optional[str] = None
     status: OrderStatus
     manager_id: Optional[int] = None
     manager_name: Optional[str] = None
@@ -220,3 +221,37 @@ class IntegrationOrderStatusResponse(BaseModel):
     tracking_url: str
     qr_url: str
     stages: List[OrderStageResponse] = []
+
+
+class ManagerOrderCount(BaseModel):
+    """Количество заказов по менеджеру."""
+
+    manager_id: int
+    manager_name: str
+    count: int
+
+
+class DayOrderCount(BaseModel):
+    """Количество заказов за день."""
+
+    date: str
+    count: int
+
+
+class InstallerOrderCount(BaseModel):
+    """Количество заказов по установщику."""
+
+    installer_id: int
+    installer_name: str
+    count: int
+
+
+class DashboardResponse(BaseModel):
+    """Агрегированные метрики дашборда аналитики."""
+
+    total_orders: int
+    orders_by_status: dict[str, int]
+    orders_by_manager: List[ManagerOrderCount]
+    average_completion_days: Optional[float] = None
+    orders_by_day: List[DayOrderCount]
+    top_installers: List[InstallerOrderCount]

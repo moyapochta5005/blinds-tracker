@@ -45,6 +45,7 @@ class Order(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     external_id = Column(String(100), nullable=True, unique=True, index=True)
+    public_token = Column(String(32), unique=True, nullable=True, index=True)
     customer_name = Column(String(255), nullable=False)
     customer_phone = Column(String(50), nullable=False)
     product_name = Column(String(255), nullable=False)
