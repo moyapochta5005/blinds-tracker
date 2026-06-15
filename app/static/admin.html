@@ -3709,6 +3709,10 @@
           data.full_name,
           data.manager_id
         );
+        const role = data.role;
+        if (role === 'dealer') { window.location.href = '/static/dealer.html'; return; }
+        if (role === 'courier') { window.location.href = '/static/courier.html'; return; }
+        if (role === 'cashier') { window.location.href = '/static/cashier.html'; return; }
         showApp(data.full_name, data.role);
         await loadOrders();
       } catch (err) {
