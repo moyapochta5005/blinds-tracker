@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Мои заказы — Blinds Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f0f4f8;
+      --surface: #ffffff;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --primary-light: #eff6ff;
+      --success: #16a34a;
+      --success-light: #dcfce7;
+      --warning: #d97706;
+      --warning-light: #fef3c7;
+      --danger: #dc2626;
+      --danger-light: #fef2f2;
+      --pending: #cbd5e1;
+      --shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 4px 16px rgba(15, 23, 42, 0.06);
+      --radius: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .app {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 16px 28px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .topbar-title h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .topbar-user {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .topbar-user-name {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .btn-logout {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      font-family: inherit;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+
+    .btn-logout:hover {
+      background: var(--danger-light);
+      color: var(--danger);
+      border-color: #fecaca;
+    }
+
+    .btn-logout svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .content {
+      flex: 1;
+      padding: 24px 28px 40px;
+    }
+
+    .alert {
+      display: none;
+      padding: 12px 16px;
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      margin-bottom: 20px;
+    }
+
+    .alert.visible {
+      display: block;
+    }
+
+    .alert-error {
+      background: var(--danger-light);
+      color: var(--danger);
+      border: 1px solid #fecaca;
+    }
+
+    .loading-state,
+    .empty-state {
+      text-align: center;
+      padding: 64px 20px;
+      color: var(--text-muted);
+    }
+
+    .empty-state.hidden {
+      display: none;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 32px;
+      height: 32px;
+      border: 3px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin-bottom: 12px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .orders-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .orders-table-wrap {
+      overflow-x: auto;
+    }
+
+    .orders-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+
+    .orders-table th,
+    .orders-table td {
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .orders-table th {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+      background: var(--bg);
+    }
+
+    .orders-table tbody tr {
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .orders-table tbody tr:hover {
+      background: var(--primary-light);
+    }
+
+    .orders-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .status-badge .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .status-new { background: var(--primary-light); color: var(--primary); }
+    .status-in_production { background: var(--warning-light); color: var(--warning); }
+    .status-ready { background: #e0e7ff; color: #4338ca; }
+    .status-delivered { background: var(--success-light); color: var(--success); }
+    .status-cancelled { background: var(--danger-light); color: var(--danger); }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.45);
+      z-index: 300;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-overlay.visible {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--surface);
+      border-radius: var(--radius);
+      width: 100%;
+      max-width: 560px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 8px 32px rgba(15, 23, 42, 0.18);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(135deg, #eff6ff 0%, #ffffff 60%);
+    }
+
+    .modal-header h2 {
+      font-size: 1.125rem;
+      font-weight: 700;
+    }
+
+    .modal-header-meta {
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .modal-close {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      background: none;
+      border: none;
+      border-radius: 8px;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      flex-shrink: 0;
+    }
+
+    .modal-close:hover {
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .modal-body {
+      padding: 24px;
+    }
+
+    .detail-info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .detail-info-item {
+      font-size: 0.875rem;
+      font-weight: 500;
+    }
+
+    .detail-info-item span {
+      display: block;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+      margin-bottom: 2px;
+    }
+
+    .section-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+
+    .timeline {
+      list-style: none;
+    }
+
+    .timeline-item {
+      position: relative;
+      padding-left: 32px;
+      padding-bottom: 20px;
+    }
+
+    .timeline-item:last-child {
+      padding-bottom: 0;
+    }
+
+    .timeline-item::before {
+      content: "";
+      position: absolute;
+      left: 9px;
+      top: 22px;
+      bottom: 0;
+      width: 2px;
+      background: var(--pending);
+    }
+
+    .timeline-item:last-child::before {
+      display: none;
+    }
+
+    .timeline-dot {
+      position: absolute;
+      left: 0;
+      top: 2px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--primary);
+      border: 2px solid var(--surface);
+      box-shadow: 0 0 0 2px var(--primary);
+    }
+
+    .timeline-label {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 3px;
+    }
+
+    .timeline-meta {
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+    }
+
+    .timeline-comment {
+      display: block;
+      font-style: italic;
+      margin-top: 2px;
+      color: #94a3b8;
+    }
+
+    .modal-loading {
+      text-align: center;
+      padding: 40px 20px;
+      color: var(--text-muted);
+    }
+
+    @media (max-width: 600px) {
+      .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 12px 16px;
+      }
+
+      .topbar-user {
+        width: 100%;
+        justify-content: space-between;
+      }
+
+      .content {
+        padding: 16px;
+      }
+
+      .orders-table th,
+      .orders-table td {
+        padding: 10px 12px;
+        font-size: 0.8125rem;
+      }
+
+      .detail-info-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .modal-overlay {
+        padding: 12px;
+        align-items: flex-end;
+      }
+
+      .modal {
+        max-height: 85vh;
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="topbar-title">
+        <h1>Мои заказы</h1>
+      </div>
+      <div class="topbar-user">
+        <span class="topbar-user-name" id="dealerName"></span>
+        <button class="btn-logout" id="btnLogout" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Выйти
+        </button>
+      </div>
+    </header>
+
+    <main class="content">
+      <div class="alert alert-error" id="alertError" role="alert"></div>
+
+      <div class="loading-state" id="loadingState">
+        <div class="spinner"></div>
+        <p>Загрузка заказов…</p>
+      </div>
+
+      <div class="empty-state hidden" id="emptyState">
+        <p>У вас пока нет заказов</p>
+      </div>
+
+      <div class="orders-card hidden" id="ordersCard">
+        <div class="orders-table-wrap">
+          <table class="orders-table">
+            <thead>
+              <tr>
+                <th>Номер заказа</th>
+                <th>Товар</th>
+                <th>Статус</th>
+                <th>Дата создания</th>
+              </tr>
+            </thead>
+            <tbody id="ordersTbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="modal-overlay" id="orderModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal">
+      <div class="modal-header">
+        <div>
+          <h2 id="modalTitle">Заказ</h2>
+          <div class="modal-header-meta" id="modalSubtitle"></div>
+        </div>
+        <button class="modal-close" id="modalClose" type="button" aria-label="Закрыть">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="modal-body" id="modalBody">
+        <div class="modal-loading">
+          <div class="spinner"></div>
+          <p>Загрузка…</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const TOKEN_KEY = "token";
+
+    const STATUS_LABELS = {
+      new: "Новый",
+      in_production: "В производстве",
+      ready: "Готов",
+      delivered: "Доставлен",
+      cancelled: "Отменён",
+    };
+
+    const loadingState = document.getElementById("loadingState");
+    const emptyState = document.getElementById("emptyState");
+    const ordersCard = document.getElementById("ordersCard");
+    const ordersTbody = document.getElementById("ordersTbody");
+    const alertError = document.getElementById("alertError");
+    const dealerName = document.getElementById("dealerName");
+    const btnLogout = document.getElementById("btnLogout");
+    const orderModal = document.getElementById("orderModal");
+    const modalClose = document.getElementById("modalClose");
+    const modalTitle = document.getElementById("modalTitle");
+    const modalSubtitle = document.getElementById("modalSubtitle");
+    const modalBody = document.getElementById("modalBody");
+
+    let authToken = "";
+
+    /**
+     * Декодирует payload JWT без внешних библиотек.
+     */
+    function decodeJwt(token) {
+      try {
+        const base64 = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+        return JSON.parse(atob(base64));
+      } catch {
+        return null;
+      }
+    }
+
+    /**
+     * Перенаправляет на страницу входа.
+     */
+    function redirectToLogin() {
+      window.location.href = "/static/login.html";
+    }
+
+    /**
+     * Проверяет авторизацию дилера при загрузке страницы.
+     */
+    function checkAuth() {
+      const token = localStorage.getItem(TOKEN_KEY);
+      if (!token) {
+        redirectToLogin();
+        return null;
+      }
+
+      const payload = decodeJwt(token);
+      if (!payload || payload.role !== "dealer") {
+        redirectToLogin();
+        return null;
+      }
+
+      authToken = token;
+      dealerName.textContent = payload.full_name || "";
+      return payload;
+    }
+
+    /**
+     * Экранирует HTML для безопасного вывода.
+     */
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    /**
+     * Форматирует дату ISO в локальный вид.
+     */
+    function formatDate(isoString) {
+      return new Date(isoString).toLocaleString("ru-RU", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    }
+
+    /**
+     * Форматирует дату для таблицы (короткий формат).
+     */
+    function formatDateShort(isoString) {
+      return new Date(isoString).toLocaleString("ru-RU", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    }
+
+    /**
+     * Возвращает отображаемый номер заказа.
+     */
+    function orderNumber(order) {
+      return order.external_id || String(order.id);
+    }
+
+    /**
+     * Создаёт HTML бейджа статуса.
+     */
+    function renderStatusBadge(status) {
+      const label = STATUS_LABELS[status] || status;
+      return `<span class="status-badge status-${status}"><span class="dot"></span>${escapeHtml(label)}</span>`;
+    }
+
+    /**
+     * Показывает сообщение об ошибке.
+     */
+    function showError(message) {
+      alertError.textContent = message;
+      alertError.classList.add("visible");
+    }
+
+    /**
+     * Скрывает сообщение об ошибке.
+     */
+    function hideError() {
+      alertError.classList.remove("visible");
+      alertError.textContent = "";
+    }
+
+    /**
+     * Выполняет авторизованный запрос к API.
+     */
+    async function apiFetch(url) {
+      const response = await fetch(url, {
+        headers: { Authorization: "Bearer " + authToken },
+      });
+
+      if (response.status === 401) {
+        localStorage.clear();
+        redirectToLogin();
+        throw new Error("Сессия истекла");
+      }
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.detail || "Ошибка загрузки данных");
+      }
+
+      return response.json();
+    }
+
+    /**
+     * Отрисовывает таблицу заказов.
+     */
+    function renderOrders(orders) {
+      loadingState.style.display = "none";
+
+      if (!orders.length) {
+        emptyState.classList.remove("hidden");
+        ordersCard.classList.add("hidden");
+        return;
+      }
+
+      emptyState.classList.add("hidden");
+      ordersCard.classList.remove("hidden");
+      ordersTbody.innerHTML = "";
+
+      for (const order of orders) {
+        const tr = document.createElement("tr");
+        tr.dataset.orderId = String(order.id);
+        tr.innerHTML = `
+          <td>${escapeHtml(orderNumber(order))}</td>
+          <td>${escapeHtml(order.product_name)}</td>
+          <td>${renderStatusBadge(order.status)}</td>
+          <td>${escapeHtml(formatDateShort(order.created_at))}</td>
+        `;
+        tr.addEventListener("click", () => openOrderModal(order.id));
+        ordersTbody.appendChild(tr);
+      }
+    }
+
+    /**
+     * Отрисовывает историю этапов заказа.
+     */
+    function renderStages(stages) {
+      if (!stages.length) {
+        return "<p style='color: var(--text-muted); font-size: 0.875rem;'>История этапов пуста</p>";
+      }
+
+      const sorted = [...stages].sort(
+        (a, b) => new Date(a.created_at) - new Date(b.created_at)
+      );
+
+      const items = sorted.map((stage) => {
+        const label = STATUS_LABELS[stage.stage_name] || stage.stage_name;
+        const comment = stage.comment
+          ? `<span class="timeline-comment">${escapeHtml(stage.comment)}</span>`
+          : "";
+        return `
+          <li class="timeline-item">
+            <div class="timeline-dot"></div>
+            <div class="timeline-label">${escapeHtml(label)}</div>
+            <div class="timeline-meta">
+              <span>${escapeHtml(formatDate(stage.created_at))}</span>
+              ${comment}
+            </div>
+          </li>
+        `;
+      }).join("");
+
+      return `<ol class="timeline">${items}</ol>`;
+    }
+
+    /**
+     * Отрисовывает содержимое модального окна с деталями заказа.
+     */
+    function renderOrderDetails(order) {
+      modalTitle.textContent = `Заказ № ${orderNumber(order)}`;
+      modalSubtitle.textContent = `Создан ${formatDate(order.created_at)}`;
+
+      modalBody.innerHTML = `
+        <div class="detail-info-grid">
+          <div class="detail-info-item">
+            <span>Товар</span>
+            ${escapeHtml(order.product_name)}
+          </div>
+          <div class="detail-info-item">
+            <span>Статус</span>
+            ${renderStatusBadge(order.status)}
+          </div>
+          <div class="detail-info-item">
+            <span>Клиент</span>
+            ${escapeHtml(order.customer_name)}
+          </div>
+          <div class="detail-info-item">
+            <span>Телефон</span>
+            ${escapeHtml(order.customer_phone)}
+          </div>
+        </div>
+        <div class="section-title">История этапов</div>
+        ${renderStages(order.stages || [])}
+      `;
+    }
+
+    /**
+     * Открывает модальное окно с деталями заказа.
+     */
+    async function openOrderModal(orderId) {
+      orderModal.classList.add("visible");
+      modalBody.innerHTML = `
+        <div class="modal-loading">
+          <div class="spinner"></div>
+          <p>Загрузка…</p>
+        </div>
+      `;
+
+      try {
+        const order = await apiFetch(`/orders/${orderId}`);
+        renderOrderDetails(order);
+      } catch (err) {
+        modalBody.innerHTML = `<p style="color: var(--danger); font-size: 0.875rem;">${escapeHtml(err.message || "Не удалось загрузить заказ")}</p>`;
+      }
+    }
+
+    /**
+     * Закрывает модальное окно.
+     */
+    function closeModal() {
+      orderModal.classList.remove("visible");
+    }
+
+    /**
+     * Загружает список заказов дилера.
+     */
+    async function loadOrders() {
+      try {
+        hideError();
+        const orders = await apiFetch("/orders");
+        renderOrders(orders);
+      } catch (err) {
+        loadingState.style.display = "none";
+        if (err.message !== "Сессия истекла") {
+          showError(err.message || "Не удалось загрузить заказы");
+        }
+      }
+    }
+
+    btnLogout.addEventListener("click", () => {
+      localStorage.clear();
+      window.location.href = "/static/login.html";
+    });
+
+    modalClose.addEventListener("click", closeModal);
+    orderModal.addEventListener("click", (e) => {
+      if (e.target === orderModal) {
+        closeModal();
+      }
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        closeModal();
+      }
+    });
+
+    if (checkAuth()) {
+      loadOrders();
+    }
+  </script>
+</body>
+</html>
