@@ -22,7 +22,11 @@ class User(Base):
     phone = Column(String, nullable=True)
     is_active = Column(Boolean, default=True, nullable=False)
 
-    orders = relationship("Order", back_populates="manager")
+    orders = relationship(
+        "Order",
+        foreign_keys="Order.manager_id",
+        back_populates="manager",
+    )
     installers = relationship("Installer", back_populates="manager")
 
 
@@ -65,7 +69,9 @@ class Order(Base):
         nullable=False,
     )
 
-    manager = relationship("User", back_populates="orders")
+    manager = relationship("User", foreign_keys=[manager_id], back_populates="orders")
+    dealer = relationship("User", foreign_keys=[dealer_id])
+    courier = relationship("User", foreign_keys=[courier_id])
     installer = relationship("Installer", back_populates="orders")
     stages = relationship(
         "OrderStage",
