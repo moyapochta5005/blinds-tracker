@@ -1,5 +1,6 @@
 """API-эндпоинты для работы с заказами."""
 
+import secrets
 from datetime import datetime
 from typing import Annotated, Any, List, Optional
 
@@ -165,6 +166,7 @@ def create_order(
         manager_id = order_data.manager_id
 
     order = Order(
+        public_token=secrets.token_hex(16),
         customer_name=order_data.customer_name,
         customer_phone=order_data.customer_phone,
         product_name=order_data.product_name,

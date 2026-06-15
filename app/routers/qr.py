@@ -19,17 +19,17 @@ DbSession = Annotated[Session, Depends(get_db)]
 TRACK_PAGE_BASE_URL = "http://localhost:8001/static/track.html"
 
 
-@router.get("/{order_id}/qr")
-def get_order_qr(order_id: int, db: DbSession) -> Response:
+@router.get("/{public_token}/qr")
+def get_order_qr(public_token: str, db: DbSession) -> Response:
     """Сгенерировать PNG QR-кода со ссылкой на отслеживание заказа."""
-    order = db.query(Order).filter(Order.id == order_id).first()
+    order = db.query(Order).filter(Order.public_token == public_token).first()
     if order is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Заказ не найден",
         )
 
-    track_url = f"{TRACK_PAGE_BASE_URL}?order={order_id}"
+    track_url = f"{TRACK_PAGE_BASE_URL}?order={order.public_token}"
 
     qr = qrcode.QRCode(
         version=1,

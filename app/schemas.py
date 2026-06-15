@@ -162,15 +162,15 @@ class OrderResponse(OrderBase):
     qr_url: str = Field(
         default="",
         description="URL эндпоинта PNG QR-кода для отслеживания заказа",
-        json_schema_extra={"example": "/orders/1/qr"},
+        json_schema_extra={"example": "/orders/a1b2c3d4e5f6789012345678abcdef01/qr"},
     )
 
     model_config = ConfigDict(from_attributes=True)
 
     @model_validator(mode="after")
     def populate_qr_url(self) -> Self:
-        """Заполняет URL QR-кода на основе идентификатора заказа."""
-        self.qr_url = f"/orders/{self.id}/qr"
+        """Заполняет URL QR-кода на основе public_token заказа."""
+        self.qr_url = f"/orders/{self.public_token}/qr"
         return self
 
 

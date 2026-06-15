@@ -2486,11 +2486,11 @@
         detailManagerWrap.classList.add("hidden");
       }
 
-      const qrUrl = `/orders/${order.id}/qr`;
+      const qrUrl = `/orders/${order.public_token}/qr`;
       document.getElementById("qrPreview").src = qrUrl;
       const btnDownloadQr = document.getElementById("btnDownloadQr");
       btnDownloadQr.href = qrUrl;
-      btnDownloadQr.download = `order-${order.id}-qr.png`;
+      btnDownloadQr.download = `order-${order.public_token}-qr.png`;
 
       renderDetailTimeline(order);
 

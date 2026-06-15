@@ -1,6 +1,7 @@
 """API-эндпоинты для интеграции с 1С."""
 
 import os
+import secrets
 from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends, Header, HTTPException, status
@@ -47,14 +48,14 @@ def verify_integration_api_key(
 ApiKeyAuth = Annotated[None, Depends(verify_integration_api_key)]
 
 
-def _build_tracking_url(order_id: int) -> str:
+def _build_tracking_url(public_token: str) -> str:
     """Формирует URL страницы отслеживания заказа."""
-    return f"{BASE_URL}/static/track.html?order={order_id}"
+    return f"{BASE_URL}/static/track.html?order={public_token}"
 
 
-def _build_qr_url(order_id: int) -> str:
+def _build_qr_url(public_token: str) -> str:
     """Формирует относительный URL эндпоинта QR-кода."""
-    return f"/orders/{order_id}/qr"
+    return f"/orders/{public_token}/qr"
 
 
 def _order_to_integration_response(order: Order) -> IntegrationOrderStatusResponse:
@@ -64,8 +65,8 @@ def _order_to_integration_response(order: Order) -> IntegrationOrderStatusRespon
         external_id=order.external_id,
         status=OrderStatus(order.status),
         updated_at=order.updated_at,
-        tracking_url=_build_tracking_url(order.id),
-        qr_url=_build_qr_url(order.id),
+        tracking_url=_build_tracking_url(order.public_token),
+        qr_url=_build_qr_url(order.public_token),
         stages=order.stages,
     )
 
@@ -152,6 +153,7 @@ def create_order_from_1c(
 
     order = Order(
         external_id=order_data.external_id,
+        public_token=secrets.token_hex(16),
         customer_name=order_data.customer_name,
         customer_phone=order_data.customer_phone,
         product_name=order_data.product_name,
@@ -175,8 +177,8 @@ def create_order_from_1c(
 
     return IntegrationOrderCreateResponse(
         id=order.id,
-        tracking_url=_build_tracking_url(order.id),
-        qr_url=_build_qr_url(order.id),
+        tracking_url=_build_tracking_url(order.public_token),
+        qr_url=_build_qr_url(order.public_token),
     )
 
 
