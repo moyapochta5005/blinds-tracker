@@ -50,6 +50,9 @@ create_initial_users()
 app = FastAPI(
     title="Blinds Tracker",
     description="Сервис отслеживания заказов жалюзи и штор",
+    docs_url=None,
+    redoc_url=None,
+    openapi_url=None,
 )
 
 
