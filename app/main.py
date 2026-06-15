@@ -42,6 +42,8 @@ def _migrate_orders_table() -> None:
             )
 
 
+run_migrations()
+
 # Создание таблиц при первом запуске
 Base.metadata.create_all(bind=engine)
 _migrate_orders_table()
@@ -54,11 +56,6 @@ app = FastAPI(
     redoc_url=None,
     openapi_url=None,
 )
-
-
-@app.on_event("startup")
-async def startup_event() -> None:
-    run_migrations()
 
 
 # CORS: разрешаем запросы к API с любого источника (для фронтенда)
