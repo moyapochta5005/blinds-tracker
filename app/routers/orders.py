@@ -1,15 +1,42 @@
 """API-эндпоинты для работы с заказами."""
 
+from datetime import datetime
 from typing import Annotated, Any, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from pydantic import BaseModel, ConfigDict
 from sqlalchemy.orm import Session, joinedload
 
 from app.auth_middleware import get_current_user, get_optional_user
 from app.database import get_db
 from app.models import Order, OrderStage, User
 from app.notifications import send_telegram_notification
-from app.schemas import OrderCreate, OrderResponse, OrderStatusUpdate
+from app.schemas import OrderCreate, OrderResponse, OrderStatus, OrderStatusUpdate
+
+
+class OrderTrackStageResponse(BaseModel):
+    """Публичный этап заказа для страницы отслеживания."""
+
+    stage_name: str
+    comment: Optional[str] = None
+    created_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class OrderTrackResponse(BaseModel):
+    """Публичный ответ для отслеживания заказа по токену."""
+
+    id: int
+    external_id: Optional[str] = None
+    public_token: Optional[str] = None
+    product_name: str
+    status: OrderStatus
+    created_at: datetime
+    updated_at: datetime
+    stages: List[OrderTrackStageResponse] = []
+
+    model_config = ConfigDict(from_attributes=True)
 
 router = APIRouter(prefix="/orders", tags=["orders"])
 
@@ -68,6 +95,23 @@ def list_orders(
 
     orders = query.order_by(Order.updated_at.desc()).all()
     return [_order_to_response(order) for order in orders]
+
+
+@router.get("/track/{public_token}", response_model=OrderTrackResponse)
+def track_order(public_token: str, db: DbSession) -> OrderTrackResponse:
+    """Публичное отслеживание заказа по токену (без авторизации)."""
+    order = (
+        db.query(Order)
+        .options(joinedload(Order.stages))
+        .filter(Order.public_token == public_token)
+        .first()
+    )
+    if order is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Заказ не найден",
+        )
+    return OrderTrackResponse.model_validate(order)
 
 
 @router.get("/{order_id}", response_model=OrderResponse)
