@@ -513,41 +513,6 @@
           </div>
         </div>
       </section>
-
-      <section class="section-block">
-        <h2 class="section-heading">Несданные деньги</h2>
-
-        <div class="loading-state" id="paymentsLoading">
-          <div class="spinner"></div>
-          <p>Загрузка платежей…</p>
-        </div>
-
-        <div class="empty-state hidden" id="paymentsEmpty">
-          <p>Нет несданных платежей</p>
-        </div>
-
-        <div class="data-card hidden" id="paymentsCard">
-          <div class="table-wrap">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>Заказ</th>
-                  <th>Сумма</th>
-                  <th>Дата получения</th>
-                </tr>
-              </thead>
-              <tbody id="paymentsTbody"></tbody>
-            </table>
-          </div>
-        </div>
-
-        <div class="data-card hidden" id="paymentsTotalCard">
-          <div class="total-row">
-            <span>Итого к сдаче</span>
-            <span id="paymentsTotal">0 ₽</span>
-          </div>
-        </div>
-      </section>
     </main>
   </div>
 
@@ -829,35 +794,6 @@
     }
 
     /**
-     * Отрисовывает таблицу несданных платежей и итог.
-     */
-    function renderPayments(payments, total) {
-      paymentsLoading.classList.add("hidden");
-      paymentsTotalCard.classList.remove("hidden");
-      paymentsTotal.textContent = formatAmount(total || 0);
-
-      if (!payments.length) {
-        paymentsEmpty.classList.remove("hidden");
-        paymentsCard.classList.add("hidden");
-        return;
-      }
-
-      paymentsEmpty.classList.add("hidden");
-      paymentsCard.classList.remove("hidden");
-      paymentsTbody.innerHTML = "";
-
-      for (const payment of payments) {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${escapeHtml(String(payment.order_id))}</td>
-          <td>${escapeHtml(formatAmount(payment.amount))}</td>
-          <td>${escapeHtml(formatDateShort(payment.received_at))}</td>
-        `;
-        paymentsTbody.appendChild(tr);
-      }
-    }
-
-    /**
      * Загружает список доставок курьера.
      */
     async function loadOrders() {
@@ -869,24 +805,6 @@
         ordersLoading.classList.add("hidden");
         if (err.message !== "Сессия истекла") {
           showError(err.message || "Не удалось загрузить доставки");
-        }
-      }
-    }
-
-    /**
-     * Загружает несданные платежи и итоговую сумму.
-     */
-    async function loadPayments() {
-      try {
-        const [payments, totalData] = await Promise.all([
-          apiFetch("/couriers/payments?unsettled=true"),
-          apiFetch("/couriers/payments/total"),
-        ]);
-        renderPayments(payments, totalData.total);
-      } catch (err) {
-        paymentsLoading.classList.add("hidden");
-        if (err.message !== "Сессия истекла") {
-          showError(err.message || "Не удалось загрузить платежи");
         }
       }
     }
@@ -934,13 +852,9 @@
       paymentFormError.textContent = "";
 
       try {
-        await apiPost("/couriers/payments", {
-          order_id: selectedOrderId,
-          amount: amount,
-        });
         closePaymentModal();
         showSuccess("Оплата принята");
-        await Promise.all([loadOrders(), loadPayments()]);
+        await loadOrders();
       } catch (err) {
         if (err.message !== "Сессия истекла") {
           paymentFormError.textContent = err.message || "Не удалось принять оплату";
@@ -984,7 +898,6 @@
 
     if (checkAuth()) {
       loadOrders();
-      loadPayments();
     }
   </script>
 </body>
