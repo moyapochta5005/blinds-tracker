@@ -31,6 +31,14 @@ CREATE_PUBLIC_TOKEN_INDEX: Final[str] = """
 CREATE UNIQUE INDEX IF NOT EXISTS ix_orders_public_token ON orders(public_token)
 """
 
+ADD_USER_MANAGER_ID_COLUMN: Final[str] = """
+ALTER TABLE users ADD COLUMN manager_id INTEGER REFERENCES users(id)
+"""
+
+ADD_USER_PHONE_COLUMN: Final[str] = """
+ALTER TABLE users ADD COLUMN phone TEXT
+"""
+
 
 def get_database_path() -> str:
     """Возвращает путь к файлу SQLite из DATABASE_URL или значение по умолчанию."""
@@ -74,6 +82,18 @@ def run_migrations() -> None:
 
         cursor.execute(CREATE_PUBLIC_TOKEN_INDEX)
         print("Уникальный индекс ix_orders_public_token создан или уже существует.")
+
+        if not column_exists(cursor, "users", "manager_id"):
+            cursor.execute(ADD_USER_MANAGER_ID_COLUMN)
+            print("Колонка manager_id добавлена в таблицу users.")
+        else:
+            print("Колонка manager_id уже существует в таблице users.")
+
+        if not column_exists(cursor, "users", "phone"):
+            cursor.execute(ADD_USER_PHONE_COLUMN)
+            print("Колонка phone добавлена в таблицу users.")
+        else:
+            print("Колонка phone уже существует в таблице users.")
 
         connection.commit()
     finally:

@@ -9,7 +9,7 @@ from app.database import Base
 
 
 class User(Base):
-    """Пользователь системы (администратор или менеджер)."""
+    """Пользователь системы (admin, manager, dealer, courier, cashier)."""
 
     __tablename__ = "users"
 
@@ -18,6 +18,8 @@ class User(Base):
     password_hash = Column(String(255), nullable=False)
     full_name = Column(String(255), nullable=False)
     role = Column(String(50), nullable=False)
+    manager_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    phone = Column(String, nullable=True)
     is_active = Column(Boolean, default=True, nullable=False)
 
     orders = relationship("Order", back_populates="manager")

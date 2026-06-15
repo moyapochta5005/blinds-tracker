@@ -43,13 +43,25 @@ class UserUpdate(BaseModel):
     is_active: Optional[bool] = None
 
 
+class UserRole(str, Enum):
+    """Допустимые роли пользователя."""
+
+    ADMIN = "admin"
+    MANAGER = "manager"
+    DEALER = "dealer"
+    COURIER = "courier"
+    CASHIER = "cashier"
+
+
 class UserResponse(BaseModel):
     """Схема ответа с данными пользователя."""
 
     id: int
     username: str
     full_name: str
-    role: str
+    role: UserRole
+    manager_id: Optional[int] = None
+    phone: Optional[str] = None
     is_active: bool
 
     model_config = ConfigDict(from_attributes=True)
