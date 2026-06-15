@@ -574,7 +574,7 @@
   </div>
 
   <script>
-    const TOKEN_KEY = "token";
+    const TOKEN_KEY = "authToken";
 
     const STATUS_LABELS = {
       new: "Новый",
@@ -737,7 +737,11 @@
       });
 
       if (response.status === 401) {
-        localStorage.clear();
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("authUsername");
+        localStorage.removeItem("authRole");
+        localStorage.removeItem("authFullName");
+        localStorage.removeItem("authManagerId");
         redirectToAdmin();
         throw new Error("Сессия истекла");
       }
@@ -764,7 +768,11 @@
       });
 
       if (response.status === 401) {
-        localStorage.clear();
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("authUsername");
+        localStorage.removeItem("authRole");
+        localStorage.removeItem("authFullName");
+        localStorage.removeItem("authManagerId");
         redirectToAdmin();
         throw new Error("Сессия истекла");
       }
@@ -944,7 +952,11 @@
     }
 
     btnLogout.addEventListener("click", () => {
-      localStorage.clear();
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("authUsername");
+      localStorage.removeItem("authRole");
+      localStorage.removeItem("authFullName");
+      localStorage.removeItem("authManagerId");
       redirectToAdmin();
     });
 
