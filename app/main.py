@@ -9,7 +9,7 @@ from sqlalchemy import inspect, text
 from app.database import Base, engine
 from app.create_admin import create_initial_users
 from app.migrate import run_migrations
-from app.routers import analytics, auth, dealers, integration, orders, qr, users
+from app.routers import analytics, auth, couriers, dealers, integration, orders, qr, users
 
 
 def _migrate_orders_table() -> None:
@@ -71,6 +71,7 @@ app.include_router(auth.router)
 app.include_router(analytics.router)
 app.include_router(users.router)
 app.include_router(dealers.router)
+app.include_router(couriers.router)
 app.include_router(orders.router)
 app.include_router(qr.router)
 app.include_router(integration.router)

@@ -49,6 +49,28 @@ ADD_COURIER_ID_COLUMN: Final[str] = """
 ALTER TABLE orders ADD COLUMN courier_id INTEGER REFERENCES users(id)
 """
 
+CREATE_CASH_HANDOVERS_TABLE: Final[str] = """
+CREATE TABLE IF NOT EXISTS cash_handovers (
+    id INTEGER PRIMARY KEY,
+    courier_id INTEGER REFERENCES users(id),
+    cashier_id INTEGER REFERENCES users(id),
+    total_amount NUMERIC(10,2),
+    handed_at DATETIME DEFAULT CURRENT_TIMESTAMP
+)
+"""
+
+CREATE_PAYMENTS_TABLE: Final[str] = """
+CREATE TABLE IF NOT EXISTS payments (
+    id INTEGER PRIMARY KEY,
+    order_id INTEGER REFERENCES orders(id),
+    dealer_id INTEGER REFERENCES users(id),
+    courier_id INTEGER REFERENCES users(id),
+    amount NUMERIC(10,2),
+    received_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    handover_id INTEGER REFERENCES cash_handovers(id)
+)
+"""
+
 
 def get_database_path() -> str:
     """Возвращает путь к файлу SQLite из DATABASE_URL или значение по умолчанию."""
@@ -116,6 +138,12 @@ def run_migrations() -> None:
             print("Колонка courier_id добавлена в таблицу orders.")
         else:
             print("Колонка courier_id уже существует в таблице orders.")
+
+        cursor.execute(CREATE_CASH_HANDOVERS_TABLE)
+        print("Таблица cash_handovers создана или уже существует.")
+
+        cursor.execute(CREATE_PAYMENTS_TABLE)
+        print("Таблица payments создана или уже существует.")
 
         cursor.execute("SELECT id, name, phone, manager_id FROM installers")
         installers: list[tuple] = cursor.fetchall()

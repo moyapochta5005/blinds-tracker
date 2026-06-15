@@ -2,7 +2,7 @@
 
 from datetime import datetime
 
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, Numeric, String, Text
 from sqlalchemy.orm import relationship
 
 from app.database import Base
@@ -75,3 +75,29 @@ class OrderStage(Base):
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
 
     order = relationship("Order", back_populates="stages")
+
+
+class CashHandover(Base):
+    """Сдача наличных курьером кассиру."""
+
+    __tablename__ = "cash_handovers"
+
+    id = Column(Integer, primary_key=True)
+    courier_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    cashier_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    total_amount = Column(Numeric(10, 2), nullable=False)
+    handed_at = Column(DateTime, default=datetime.utcnow)
+
+
+class Payment(Base):
+    """Оплата, принятая курьером от дилера."""
+
+    __tablename__ = "payments"
+
+    id = Column(Integer, primary_key=True)
+    order_id = Column(Integer, ForeignKey("orders.id"), nullable=False)
+    dealer_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    courier_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    amount = Column(Numeric(10, 2), nullable=False)
+    received_at = Column(DateTime, default=datetime.utcnow)
+    handover_id = Column(Integer, ForeignKey("cash_handovers.id"), nullable=True)

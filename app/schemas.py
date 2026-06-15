@@ -1,6 +1,7 @@
 """Pydantic-схемы для валидации и сериализации данных API."""
 
 from datetime import datetime
+from decimal import Decimal
 from enum import Enum
 from typing import List, Optional
 
@@ -251,3 +252,29 @@ class DashboardResponse(BaseModel):
     average_completion_days: Optional[float] = None
     orders_by_day: List[DayOrderCount]
     top_dealers: List[DealerOrderCount]
+
+
+class PaymentOut(BaseModel):
+    """Схема ответа с данными оплаты."""
+
+    id: int
+    order_id: int
+    dealer_id: int
+    courier_id: int
+    amount: Decimal
+    received_at: datetime
+    handover_id: Optional[int] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class CashHandoverOut(BaseModel):
+    """Схема ответа с данными сдачи наличных."""
+
+    id: int
+    courier_id: int
+    cashier_id: int
+    total_amount: Decimal
+    handed_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
