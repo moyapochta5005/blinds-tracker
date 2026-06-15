@@ -167,6 +167,8 @@ class OrderResponse(OrderBase):
     status: OrderStatus
     manager_id: Optional[int] = None
     manager_name: Optional[str] = None
+    dealer_id: Optional[int] = None
+    courier_id: Optional[int] = None
     installer: Optional[InstallerOut] = None
     created_at: datetime
     updated_at: datetime

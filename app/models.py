@@ -55,6 +55,8 @@ class Order(Base):
     telegram_chat_id = Column(String(50), nullable=True)
     manager_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
     installer_id = Column(Integer, ForeignKey("installers.id"), nullable=True)
+    dealer_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    courier_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(
         DateTime,

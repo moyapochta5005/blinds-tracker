@@ -2,7 +2,9 @@
 
 import os
 import sqlite3
-from typing import Final
+from typing import Final, Optional
+
+import bcrypt
 
 CREATE_INSTALLERS_TABLE: Final[str] = """
 CREATE TABLE IF NOT EXISTS installers (
@@ -37,6 +39,14 @@ ALTER TABLE users ADD COLUMN manager_id INTEGER REFERENCES users(id)
 
 ADD_USER_PHONE_COLUMN: Final[str] = """
 ALTER TABLE users ADD COLUMN phone TEXT
+"""
+
+ADD_DEALER_ID_COLUMN: Final[str] = """
+ALTER TABLE orders ADD COLUMN dealer_id INTEGER REFERENCES users(id)
+"""
+
+ADD_COURIER_ID_COLUMN: Final[str] = """
+ALTER TABLE orders ADD COLUMN courier_id INTEGER REFERENCES users(id)
 """
 
 
@@ -94,6 +104,51 @@ def run_migrations() -> None:
             print("Колонка phone добавлена в таблицу users.")
         else:
             print("Колонка phone уже существует в таблице users.")
+
+        if not column_exists(cursor, "orders", "dealer_id"):
+            cursor.execute(ADD_DEALER_ID_COLUMN)
+            print("Колонка dealer_id добавлена в таблицу orders.")
+        else:
+            print("Колонка dealer_id уже существует в таблице orders.")
+
+        if not column_exists(cursor, "orders", "courier_id"):
+            cursor.execute(ADD_COURIER_ID_COLUMN)
+            print("Колонка courier_id добавлена в таблицу orders.")
+        else:
+            print("Колонка courier_id уже существует в таблице orders.")
+
+        cursor.execute("SELECT id, name, phone, manager_id FROM installers")
+        installers: list[tuple] = cursor.fetchall()
+        dealer_password_hash: str = bcrypt.hashpw(
+            b"dealer123", bcrypt.gensalt()
+        ).decode("utf-8")
+
+        for installer_id, name, phone, manager_id in installers:
+            cursor.execute("SELECT id FROM users WHERE phone = ?", (phone,))
+            existing_user: Optional[tuple] = cursor.fetchone()
+            if existing_user is not None:
+                continue
+
+            phone_digits: str = "".join(ch for ch in (phone or "") if ch.isdigit())
+            username: str = f"dealer_{phone_digits}"
+
+            cursor.execute(
+                """
+                INSERT INTO users (
+                    username, password_hash, full_name, role, phone, manager_id, is_active
+                )
+                VALUES (?, ?, ?, 'dealer', ?, ?, 1)
+                """,
+                (username, dealer_password_hash, name, phone, manager_id),
+            )
+            user_id: int = cursor.lastrowid
+
+            cursor.execute(
+                "UPDATE orders SET dealer_id = ? WHERE installer_id = ?",
+                (user_id, installer_id),
+            )
+
+        print(f"Миграция installers → users: обработано {len(installers)} записей.")
 
         connection.commit()
     finally:
