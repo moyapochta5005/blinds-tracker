@@ -56,6 +56,18 @@ def create_initial_users() -> None:
                 )
                 print(f"Создан менеджер: {username} ({full_name})")
 
+        superadmin = db.query(User).filter(User.username == "superadmin").first()
+        if superadmin is None:
+            db.add(User(
+                username="superadmin",
+                password_hash=hash_password("superadmin123"),
+                full_name="Суперадминистратор",
+                role="superadmin",
+                is_active=True,
+                company_id=None,
+            ))
+            print("Создан суперадмин: superadmin")
+
         db.commit()
     finally:
         db.close()

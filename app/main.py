@@ -7,7 +7,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.database import Base, engine
 from app.create_admin import create_initial_users
-from app.routers import analytics, auth, cashier, couriers, dealers, integration, orders, qr, users
+from app.routers import analytics, auth, cashier, companies, couriers, dealers, integration, orders, qr, users
 
 # Создание таблиц
 Base.metadata.create_all(bind=engine)
@@ -40,6 +40,7 @@ app.include_router(cashier.router)
 app.include_router(orders.router)
 app.include_router(qr.router)
 app.include_router(integration.router)
+app.include_router(companies.router)
 
 # Статические файлы фронтенда
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
