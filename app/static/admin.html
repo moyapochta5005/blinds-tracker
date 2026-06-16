@@ -3740,6 +3740,12 @@
 
     // Первичная загрузка: проверяем сохранённый токен
     (async function init() {
+      const storedRole = localStorage.getItem("authRole");
+      if (!storedRole) { window.location.href = "/static/login.html"; return; }
+      if (storedRole === "dealer") { window.location.href = "/static/dealer.html"; return; }
+      if (storedRole === "courier") { window.location.href = "/static/courier.html"; return; }
+      if (storedRole === "cashier") { window.location.href = "/static/cashier.html"; return; }
+
       const token = getAuthToken();
       const username = localStorage.getItem(AUTH_USERNAME_KEY);
       const role = localStorage.getItem(AUTH_ROLE_KEY);

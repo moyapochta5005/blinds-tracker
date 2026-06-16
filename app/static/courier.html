@@ -621,9 +621,7 @@
     /**
      * Перенаправляет на страницу входа администратора.
      */
-    function redirectToAdmin() {
-      window.location.href = "/static/admin.html";
-    }
+    function redirectToLogin() { window.location.href = "/static/login.html"; }
 
     /**
      * Проверяет авторизацию курьера при загрузке страницы.
@@ -631,13 +629,13 @@
     function checkAuth() {
       const token = localStorage.getItem(TOKEN_KEY);
       if (!token) {
-        redirectToAdmin();
+        redirectToLogin();
         return null;
       }
 
       const payload = decodeJwt(token);
       if (!payload || payload.role !== "courier") {
-        redirectToAdmin();
+        redirectToLogin();
         return null;
       }
 
@@ -739,7 +737,7 @@
         localStorage.removeItem("authRole");
         localStorage.removeItem("authFullName");
         localStorage.removeItem("authManagerId");
-        redirectToAdmin();
+        redirectToLogin();
         throw new Error("Сессия истекла");
       }
 
@@ -770,7 +768,7 @@
         localStorage.removeItem("authRole");
         localStorage.removeItem("authFullName");
         localStorage.removeItem("authManagerId");
-        redirectToAdmin();
+        redirectToLogin();
         throw new Error("Сессия истекла");
       }
 
@@ -954,7 +952,7 @@
       localStorage.removeItem("authRole");
       localStorage.removeItem("authFullName");
       localStorage.removeItem("authManagerId");
-      redirectToAdmin();
+      redirectToLogin();
     });
 
     paymentModalClose.addEventListener("click", closePaymentModal);
