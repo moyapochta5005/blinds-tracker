@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Регистрация — Blinds Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f0f4f8;
+      --surface: #ffffff;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --danger: #dc2626;
+      --danger-light: #fef2f2;
+      --success: #16a34a;
+      --success-light: #dcfce7;
+      --shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 4px 16px rgba(15, 23, 42, 0.06);
+      --radius: 12px;
+      --sidebar-accent: #3b82f6;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .register-screen {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    .register-card {
+      width: 100%;
+      max-width: 420px;
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 32px;
+    }
+
+    .login-logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .login-logo-icon {
+      width: 44px;
+      height: 44px;
+      background: var(--sidebar-accent);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .login-logo-icon svg {
+      width: 22px;
+      height: 22px;
+      color: #fff;
+    }
+
+    .login-logo-text {
+      font-size: 1.375rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.3;
+    }
+
+    .register-subtitle {
+      text-align: center;
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+    }
+
+    .section-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin: 20px 0 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .login-field {
+      margin-bottom: 14px;
+    }
+
+    .login-field label {
+      display: block;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .login-field input {
+      width: 100%;
+      padding: 10px 14px;
+      font-family: inherit;
+      font-size: 0.9375rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      transition: border-color 0.15s;
+    }
+
+    .login-field input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+
+    .field-hint {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .alert {
+      display: none;
+      font-size: 0.8125rem;
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-bottom: 16px;
+    }
+
+    .alert.error {
+      color: var(--danger);
+      background: var(--danger-light);
+      border: 1px solid #fecaca;
+    }
+
+    .alert.success {
+      color: var(--success);
+      background: var(--success-light);
+      border: 1px solid #bbf7d0;
+    }
+
+    .alert.visible { display: block; }
+
+    .btn-primary {
+      width: 100%;
+      padding: 12px 20px;
+      font-family: inherit;
+      font-size: 0.9375rem;
+      font-weight: 600;
+      color: #fff;
+      background: var(--primary);
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.15s;
+      margin-top: 8px;
+    }
+
+    .btn-primary:hover:not(:disabled) { background: var(--primary-hover); }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .back-link {
+      display: block;
+      text-align: center;
+      margin-top: 20px;
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      text-decoration: none;
+    }
+
+    .back-link:hover { color: var(--primary); }
+  </style>
+</head>
+<body>
+  <div class="register-screen">
+    <div class="register-card">
+
+      <div class="login-logo">
+        <div class="login-logo-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <line x1="3" y1="9" x2="21" y2="9"/>
+            <line x1="3" y1="15" x2="21" y2="15"/>
+          </svg>
+        </div>
+        <div class="login-logo-text">Blinds Tracker</div>
+      </div>
+
+      <div class="register-subtitle">Регистрация новой компании</div>
+
+      <div class="alert error" id="alertError" role="alert"></div>
+      <div class="alert success" id="alertSuccess" role="status"></div>
+
+      <form id="registerForm">
+        <div class="section-label">О компании</div>
+
+        <div class="login-field">
+          <label for="company_name">Название компании</label>
+          <input type="text" id="company_name" placeholder="Например: Штора Махачкала" required>
+        </div>
+
+        <div class="section-label">Аккаунт администратора</div>
+
+        <div class="login-field">
+          <label for="admin_full_name">Полное имя</label>
+          <input type="text" id="admin_full_name" placeholder="Иван Иванов" required>
+        </div>
+
+        <div class="login-field">
+          <label for="admin_phone">Телефон</label>
+          <input type="tel" id="admin_phone" placeholder="+7 900 000-00-00">
+          <div class="field-hint">Необязательно</div>
+        </div>
+
+        <div class="login-field">
+          <label for="admin_username">Логин</label>
+          <input type="text" id="admin_username" placeholder="latin_login" autocomplete="username" required>
+          <div class="field-hint">Только латиница, цифры и подчёркивание</div>
+        </div>
+
+        <div class="login-field">
+          <label for="admin_password">Пароль</label>
+          <div style="position:relative;">
+            <input type="password" id="admin_password" autocomplete="new-password" required style="width:100%;padding-right:44px;">
+            <button type="button" onclick="togglePassword()" id="toggleBtn" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-muted);padding:0;display:flex;align-items:center;">
+              <svg id="eyeIcon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </button>
+          </div>
+          <div class="field-hint">Минимум 8 символов</div>
+        </div>
+
+        <button class="btn-primary" id="btnRegister" type="submit">Зарегистрировать компанию</button>
+      </form>
+
+      <a href="/static/login.html" class="back-link">← Вернуться ко входу</a>
+    </div>
+  </div>
+
+  <script>
+    const alertError = document.getElementById("alertError");
+    const alertSuccess = document.getElementById("alertSuccess");
+    const btnRegister = document.getElementById("btnRegister");
+    const registerForm = document.getElementById("registerForm");
+
+    function togglePassword() {
+      const input = document.getElementById("admin_password");
+      const eyeIcon = document.getElementById("eyeIcon");
+      const isHidden = input.type === "password";
+      input.type = isHidden ? "text" : "password";
+      eyeIcon.innerHTML = isHidden
+        ? '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>'
+        : '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+    }
+
+    function showError(msg) {
+      alertError.textContent = msg;
+      alertError.classList.add("visible");
+      alertSuccess.classList.remove("visible");
+    }
+
+    function showSuccess(msg) {
+      alertSuccess.textContent = msg;
+      alertSuccess.classList.add("visible");
+      alertError.classList.remove("visible");
+    }
+
+    registerForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      alertError.classList.remove("visible");
+      alertSuccess.classList.remove("visible");
+
+      const company_name = document.getElementById("company_name").value.trim();
+      const admin_full_name = document.getElementById("admin_full_name").value.trim();
+      const admin_username = document.getElementById("admin_username").value.trim();
+      const admin_password = document.getElementById("admin_password").value;
+      const admin_phone = document.getElementById("admin_phone").value.trim() || null;
+
+      if (admin_password.length < 8) {
+        showError("Пароль должен содержать минимум 8 символов.");
+        return;
+      }
+
+      btnRegister.disabled = true;
+      btnRegister.textContent = "Регистрация...";
+
+      try {
+        const response = await fetch("/companies/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ company_name, admin_full_name, admin_username, admin_password, admin_phone }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.detail || "Ошибка регистрации.");
+        }
+
+        showSuccess(`Компания «${data.company_name}» успешно зарегистрирована! Перенаправляем на страницу входа...`);
+        registerForm.style.display = "none";
+
+        setTimeout(() => {
+          window.location.href = "/static/login.html";
+        }, 2500);
+
+      } catch (err) {
+        showError(err.message || "Ошибка сервера. Попробуйте позже.");
+      } finally {
+        btnRegister.disabled = false;
+        btnRegister.textContent = "Зарегистрировать компанию";
+      }
+    });
+  </script>
+</body>
+</html>
