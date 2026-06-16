@@ -1893,11 +1893,11 @@
           </div>
         </section>
 
-        <!-- Управление установщиками -->
+        <!-- Управление дилерами -->
         <section class="installers-panel" id="installersPanel">
           <div class="panel-card">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px">
-              <h2>Установщики</h2>
+              <h2>Дилеры</h2>
               <div style="display:flex; gap:8px">
                 <button class="btn-primary" type="button" onclick="showInstallerForm()">+ Добавить</button>
                 <button type="button" onclick="document.getElementById('installer-import-file').click()">📁 Импорт из файла</button>
@@ -1906,9 +1906,9 @@
             </div>
 
             <div id="installer-form" style="display:none; background:var(--bg); padding:16px; border-radius:8px; margin-bottom:16px; border:1px solid var(--border)">
-              <h3 id="installer-form-title" style="font-size:0.9375rem; margin-bottom:12px">Новый установщик</h3>
+              <h3 id="installer-form-title" style="font-size:0.9375rem; margin-bottom:12px">Новый дилер</h3>
               <div class="form-group">
-                <input id="installer-name" type="text" placeholder="ФИО установщика">
+                <input id="installer-name" type="text" placeholder="ФИО дилера">
               </div>
               <div class="form-group">
                 <input id="installer-phone" type="text" placeholder="Телефон (+7XXXXXXXXXX)">
@@ -2325,9 +2325,9 @@
         managerFilterWrap.classList.remove("visible");
         btnNewOrder.classList.add("hidden");
       } else if (isInstallers) {
-        document.getElementById("pageTitle").textContent = "Установщики";
+        document.getElementById("pageTitle").textContent = "Дилеры";
         document.getElementById("pageSubtitle").textContent =
-          "Добавление и редактирование установщиков";
+          "Добавление и редактирование дилеров";
         managerFilterWrap.classList.remove("visible");
         btnNewOrder.classList.add("hidden");
       } else if (isAnalytics) {
@@ -2737,10 +2737,10 @@
      * Загружает список установщиков с API.
      */
     async function fetchInstallers() {
-      const response = await apiFetch("/installers");
+      const response = await apiFetch("/dealers");
 
       if (!response.ok) {
-        throw new Error("Не удалось загрузить установщиков.");
+        throw new Error("Не удалось загрузить дилеров.");
       }
 
       return response.json();
@@ -2754,7 +2754,7 @@
 
       if (allInstallers.length === 0) {
         const row = document.createElement("tr");
-        row.innerHTML = '<td colspan="4" style="color: var(--text-muted);">Установщиков пока нет</td>';
+        row.innerHTML = '<td colspan="4" style="color: var(--text-muted);">Дилеров пока нет</td>';
         installersTbody.appendChild(row);
         return;
       }
@@ -2793,7 +2793,7 @@
         renderInstallersTable();
         populateOrderInstallers();
       } catch (err) {
-        showError(err.message || "Ошибка загрузки установщиков.");
+        showError(err.message || "Ошибка загрузки дилеров.");
       } finally {
         installersLoading.style.display = "none";
       }
@@ -2971,12 +2971,12 @@
         if (!installer) return;
 
         editingInstallerId = installer.id;
-        document.getElementById("installer-form-title").textContent = "Редактирование установщика";
+        document.getElementById("installer-form-title").textContent = "Редактирование дилера";
         document.getElementById("installer-name").value = installer.name;
         document.getElementById("installer-phone").value = installer.phone || "";
       } else {
         editingInstallerId = null;
-        document.getElementById("installer-form-title").textContent = "Новый установщик";
+        document.getElementById("installer-form-title").textContent = "Новый дилер";
         document.getElementById("installer-name").value = "";
         document.getElementById("installer-phone").value = "";
       }
@@ -2999,7 +2999,7 @@
      * Создаёт нового установщика.
      */
     async function createInstaller(payload) {
-      const response = await apiFetch("/installers", {
+      const response = await apiFetch("/dealers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -3007,7 +3007,7 @@
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
-        throw new Error(data.detail || "Не удалось создать установщика.");
+        throw new Error(data.detail || "Не удалось создать дилера.");
       }
 
       return response.json();
@@ -3017,7 +3017,7 @@
      * Обновляет данные установщика.
      */
     async function updateInstaller(installerId, payload) {
-      const response = await apiFetch(`/installers/${installerId}`, {
+      const response = await apiFetch(`/dealers/${installerId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -3025,7 +3025,7 @@
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
-        throw new Error(data.detail || "Не удалось обновить установщика.");
+        throw new Error(data.detail || "Не удалось обновить дилера.");
       }
 
       return response.json();
@@ -3035,13 +3035,13 @@
      * Деактивирует установщика.
      */
     async function deactivateInstaller(installerId) {
-      const response = await apiFetch(`/installers/${installerId}`, {
+      const response = await apiFetch(`/dealers/${installerId}`, {
         method: "DELETE",
       });
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
-        throw new Error(data.detail || "Не удалось деактивировать установщика.");
+        throw new Error(data.detail || "Не удалось деактивировать дилера.");
       }
 
       return response.json();
@@ -3055,7 +3055,7 @@
       const phone = document.getElementById("installer-phone").value.trim();
 
       if (!name) {
-        showError("Укажите ФИО установщика.");
+        showError("Укажите ФИО дилера.");
         return;
       }
 
@@ -3074,16 +3074,16 @@
       try {
         if (editingInstallerId) {
           await updateInstaller(editingInstallerId, payload);
-          showSuccess("Установщик обновлён.");
+          showSuccess("Дилер обновлён.");
         } else {
           await createInstaller(payload);
-          showSuccess("Установщик создан.");
+          showSuccess("Дилер создан.");
         }
 
         hideInstallerForm();
         await loadInstallers();
       } catch (err) {
-        showError(err.message || "Ошибка сохранения установщика.");
+        showError(err.message || "Ошибка сохранения дилера.");
       }
     }
 
@@ -3103,7 +3103,7 @@
       resultBox.innerHTML = "⏳ Загружаем и обрабатываем файл...";
 
       try {
-        const res = await fetch("/installers/import", {
+        const res = await fetch("/dealers/import", {
           method: "POST",
           headers: { Authorization: "Bearer " + token },
           body: formData,
@@ -3565,16 +3565,16 @@
       }
 
       if (button.dataset.action === "deactivate") {
-        if (!confirm(`Деактивировать установщика «${installer.name}»?`)) {
+        if (!confirm(`Деактивировать дилера «${installer.name}»?`)) {
           return;
         }
 
         try {
           await deactivateInstaller(installerId);
-          showSuccess("Установщик деактивирован.");
+          showSuccess("Дилер деактивирован.");
           await loadInstallers();
         } catch (err) {
-          showError(err.message || "Ошибка деактивации установщика.");
+          showError(err.message || "Ошибка деактивации дилера.");
         }
       }
     });

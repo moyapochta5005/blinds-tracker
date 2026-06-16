@@ -77,17 +77,27 @@ def list_couriers(
 def list_courier_orders(
     db: DbSession,
     current_user: CurrentUser,
-) -> List[Order]:
+) -> List[OrderResponse]:
     """Получить заказы текущего курьера."""
     _require_courier(current_user)
 
     courier_id = _current_user_id(current_user)
-    return (
+    orders = (
         db.query(Order)
         .filter(Order.courier_id == courier_id)
         .order_by(Order.created_at.desc())
         .all()
     )
+
+    result: List[OrderResponse] = []
+    for order in orders:
+        response = OrderResponse.model_validate(order)
+        if order.dealer_id is not None:
+            dealer = db.query(User).filter(User.id == order.dealer_id).first()
+            if dealer is not None:
+                response.dealer_name = dealer.full_name
+        result.append(response)
+    return result
 
 
 @router.post("/payments", response_model=PaymentOut, status_code=status.HTTP_201_CREATED)

@@ -150,6 +150,7 @@ class OrderResponse(OrderBase):
     manager_id: Optional[int] = None
     manager_name: Optional[str] = None
     dealer_id: Optional[int] = None
+    dealer_name: Optional[str] = None
     courier_id: Optional[int] = None
     created_at: datetime
     updated_at: datetime
