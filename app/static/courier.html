@@ -571,7 +571,7 @@
     const paymentFormError = document.getElementById("paymentFormError");
 
     let authToken = "";
-    let selectedOrderId = null;
+    let currentOrderId = null;
     let successTimeout = null;
 
     /**
@@ -813,7 +813,7 @@
      * Открывает модальное окно приёма оплаты.
      */
     function openPaymentModal(orderId) {
-      selectedOrderId = orderId;
+      currentOrderId = orderId;
       paymentAmount.value = "";
       paymentFormError.classList.remove("visible");
       paymentFormError.textContent = "";
@@ -826,7 +826,7 @@
      */
     function closePaymentModal() {
       paymentModal.classList.remove("visible");
-      selectedOrderId = null;
+      currentOrderId = null;
       paymentAmount.value = "";
       paymentFormError.classList.remove("visible");
       paymentFormError.textContent = "";
@@ -836,7 +836,7 @@
      * Подтверждает приём оплаты по заказу.
      */
     async function confirmPayment() {
-      if (!selectedOrderId) {
+      if (!currentOrderId) {
         return;
       }
 
@@ -852,6 +852,10 @@
       paymentFormError.textContent = "";
 
       try {
+        await apiPost("/couriers/payments", {
+          order_id: currentOrderId,
+          amount: amount
+        });
         closePaymentModal();
         showSuccess("Оплата принята");
         await loadOrders();
