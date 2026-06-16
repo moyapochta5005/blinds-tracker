@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Аналитика — Blinds Tracker</title>
+  <style>
+    :root {
+      --bg: #f0f4f8;
+      --surface: #fff;
+      --text: #1e293b;
+      --primary: #2563eb;
+      --border: #e2e8f0;
+      --text-muted: #64748b;
+      --success: #16a34a;
+      --warning: #d97706;
+      --danger: #dc2626;
+      --danger-light: #fef2f2;
+      --shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 4px 16px rgba(15, 23, 42, 0.06);
+      --radius: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .app {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 16px 28px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .topbar-title h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 8px 14px;
+      font-family: inherit;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+
+    .btn-back {
+      color: var(--text-muted);
+      background: var(--bg);
+      border: 1px solid var(--border);
+    }
+
+    .btn-back:hover {
+      color: var(--primary);
+      border-color: var(--primary);
+    }
+
+    .btn-logout {
+      color: var(--text-muted);
+      background: var(--bg);
+      border: 1px solid var(--border);
+    }
+
+    .btn-logout:hover {
+      background: var(--danger-light);
+      color: var(--danger);
+      border-color: #fecaca;
+    }
+
+    .content {
+      flex: 1;
+      padding: 24px 28px 40px;
+      max-width: 1200px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .alert {
+      display: none;
+      padding: 12px 16px;
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      margin-bottom: 20px;
+      background: var(--danger-light);
+      color: var(--danger);
+      border: 1px solid #fecaca;
+    }
+
+    .alert.visible {
+      display: block;
+    }
+
+    .period-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+
+    .period-btn {
+      font-family: inherit;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      padding: 8px 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+
+    .period-btn:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .period-btn.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    .loading-state {
+      display: none;
+      text-align: center;
+      padding: 48px 20px;
+      color: var(--text-muted);
+    }
+
+    .loading-state.visible {
+      display: block;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 32px;
+      height: 32px;
+      border: 3px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-bottom: 12px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .kpi-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px;
+    }
+
+    .kpi-label {
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+
+    .kpi-value {
+      font-size: 1.75rem;
+      font-weight: 700;
+      line-height: 1.2;
+      color: var(--text);
+    }
+
+    .kpi-sub {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 6px;
+    }
+
+    .sections-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+    }
+
+    @media (max-width: 900px) {
+      .sections-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      padding: 24px;
+    }
+
+    .panel-card h2 {
+      font-size: 0.9375rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .bar-chart-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .bar-chart-label {
+      flex: 0 0 120px;
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+    }
+
+    .bar-chart-track {
+      flex: 1;
+      height: 24px;
+      background: var(--bg);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .bar-chart-bar {
+      height: 100%;
+      min-width: 2px;
+      border-radius: 6px;
+      background: var(--primary);
+      transition: width 0.3s ease;
+    }
+
+    .bar-chart-bar.status-new { background: var(--primary); }
+    .bar-chart-bar.status-in_production { background: var(--warning); }
+    .bar-chart-bar.status-ready { background: #6366f1; }
+    .bar-chart-bar.status-handed_to_courier { background: #0ea5e9; }
+    .bar-chart-bar.status-in_transit { background: #8b5cf6; }
+    .bar-chart-bar.status-delivered { background: var(--success); }
+
+    .bar-chart-value {
+      flex: 0 0 36px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      text-align: right;
+    }
+
+    .data-table-wrap {
+      overflow-x: auto;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+
+    .data-table th,
+    .data-table td {
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .data-table th {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+    }
+
+    .empty-message {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      padding: 12px 0;
+    }
+
+    #analyticsContent {
+      transition: opacity 0.2s;
+    }
+
+    #analyticsContent.loading {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="btn btn-back" id="btnBack" type="button">← Назад</button>
+        <div class="topbar-title">
+          <h1>Аналитика</h1>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn btn-logout" id="btnLogout" type="button">Выйти</button>
+      </div>
+    </header>
+
+    <main class="content">
+      <div class="alert" id="alertError"></div>
+
+      <div class="period-buttons" id="periodButtons" role="tablist" aria-label="Период">
+        <button class="period-btn" type="button" data-period="day">Сегодня</button>
+        <button class="period-btn" type="button" data-period="week">Неделя</button>
+        <button class="period-btn active" type="button" data-period="month">Месяц</button>
+        <button class="period-btn" type="button" data-period="all">Всё время</button>
+      </div>
+
+      <div class="loading-state" id="loadingState">
+        <div class="spinner"></div>
+        <div>Загрузка аналитики…</div>
+      </div>
+
+      <div id="analyticsContent">
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-label">Всего заказов</div>
+            <div class="kpi-value" id="kpiTotalOrders">—</div>
+            <div class="kpi-sub" id="kpiPeriodHint">за 30 дней</div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-label">Среднее время выполнения</div>
+            <div class="kpi-value" id="kpiAvgDays">—</div>
+            <div class="kpi-sub">дней до статуса «Доставлен»</div>
+          </div>
+        </div>
+
+        <div class="sections-grid">
+          <section class="panel-card">
+            <h2>Заказы по статусам</h2>
+            <div id="statusSection"></div>
+          </section>
+
+          <section class="panel-card">
+            <h2>Заказы по дням</h2>
+            <div class="data-table-wrap">
+              <table class="data-table" id="daysTable">
+                <thead>
+                  <tr>
+                    <th>Дата</th>
+                    <th>Заказов</th>
+                  </tr>
+                </thead>
+                <tbody id="daysTableBody"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="panel-card">
+            <h2>Топ дилеров</h2>
+            <div class="data-table-wrap">
+              <table class="data-table" id="dealersTable">
+                <thead>
+                  <tr>
+                    <th>Дилер</th>
+                    <th>Заказов</th>
+                  </tr>
+                </thead>
+                <tbody id="dealersTableBody"></tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const AUTH_TOKEN_KEY = "authToken";
+
+    const STATUS_LABELS = {
+      new: "Принят",
+      in_production: "В производстве",
+      ready: "Готов",
+      handed_to_courier: "Передан курьеру",
+      in_transit: "В пути",
+      delivered: "Доставлен",
+    };
+
+    const ANALYTICS_STATUSES = [
+      "new",
+      "in_production",
+      "ready",
+      "handed_to_courier",
+      "in_transit",
+      "delivered",
+    ];
+
+    const PERIOD_LABELS = {
+      day: "сегодня",
+      week: "за 7 дней",
+      month: "за 30 дней",
+      all: "за всё время",
+    };
+
+    const ROLE_REDIRECTS = {
+      admin: "/static/admin.html",
+      manager: "/static/admin.html",
+    };
+
+    let currentPeriod = "month";
+    let authToken = "";
+
+    const alertError = document.getElementById("alertError");
+    const loadingState = document.getElementById("loadingState");
+    const analyticsContent = document.getElementById("analyticsContent");
+    const periodButtons = document.getElementById("periodButtons");
+
+    /**
+     * Перенаправляет на страницу входа.
+     */
+    function redirectToLogin() {
+      window.location.href = "/static/login.html";
+    }
+
+    /**
+     * Проверяет наличие токена авторизации.
+     */
+    function checkAuth() {
+      const token = localStorage.getItem(AUTH_TOKEN_KEY);
+      if (!token) {
+        redirectToLogin();
+        return false;
+      }
+      authToken = token;
+      return true;
+    }
+
+    /**
+     * Экранирует HTML для безопасного вывода.
+     */
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    /**
+     * Показывает сообщение об ошибке.
+     */
+    function showError(message) {
+      alertError.textContent = message;
+      alertError.classList.add("visible");
+    }
+
+    /**
+     * Скрывает сообщение об ошибке.
+     */
+    function hideError() {
+      alertError.textContent = "";
+      alertError.classList.remove("visible");
+    }
+
+    /**
+     * Форматирует дату YYYY-MM-DD в DD.MM.YYYY.
+     */
+    function formatDayDate(dateStr) {
+      const parts = dateStr.split("-");
+      if (parts.length === 3) {
+        return `${parts[2]}.${parts[1]}.${parts[0]}`;
+      }
+      return dateStr;
+    }
+
+    /**
+     * Загружает данные дашборда аналитики.
+     */
+    async function fetchDashboard(period) {
+      const response = await fetch(
+        `/analytics/dashboard?period=${encodeURIComponent(period)}`,
+        {
+          headers: {
+            Authorization: "Bearer " + authToken,
+          },
+        }
+      );
+
+      if (response.status === 401) {
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("authUsername");
+        localStorage.removeItem("authRole");
+        localStorage.removeItem("authFullName");
+        localStorage.removeItem("authManagerId");
+        redirectToLogin();
+        return null;
+      }
+
+      if (!response.ok) {
+        throw new Error("Не удалось загрузить аналитику.");
+      }
+
+      return response.json();
+    }
+
+    /**
+     * Рендерит диаграмму по статусам.
+     */
+    function renderStatusSection(ordersByStatus) {
+      const container = document.getElementById("statusSection");
+      const maxCount = Math.max(
+        ...ANALYTICS_STATUSES.map((status) => ordersByStatus[status] || 0),
+        1
+      );
+
+      container.innerHTML = ANALYTICS_STATUSES
+        .map((status) => {
+          const count = ordersByStatus[status] || 0;
+          const width = Math.round((count / maxCount) * 100);
+          return `
+            <div class="bar-chart-row">
+              <div class="bar-chart-label">${escapeHtml(STATUS_LABELS[status] || status)}</div>
+              <div class="bar-chart-track">
+                <div class="bar-chart-bar status-${status}" style="width: ${width}%"></div>
+              </div>
+              <div class="bar-chart-value">${count}</div>
+            </div>
+          `;
+        })
+        .join("");
+    }
+
+    /**
+     * Рендерит таблицу заказов по дням.
+     */
+    function renderDaysTable(ordersByDay) {
+      const tbody = document.getElementById("daysTableBody");
+      tbody.innerHTML = "";
+
+      if (!ordersByDay.length) {
+        tbody.innerHTML =
+          '<tr><td colspan="2" class="empty-message">Нет заказов в выбранном периоде</td></tr>';
+        return;
+      }
+
+      for (const row of ordersByDay) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${escapeHtml(formatDayDate(row.date))}</td>
+          <td>${row.count}</td>
+        `;
+        tbody.appendChild(tr);
+      }
+    }
+
+    /**
+     * Рендерит таблицу топ дилеров.
+     */
+    function renderDealersTable(topDealers) {
+      const tbody = document.getElementById("dealersTableBody");
+      tbody.innerHTML = "";
+
+      if (!topDealers.length) {
+        tbody.innerHTML =
+          '<tr><td colspan="2" class="empty-message">Нет данных</td></tr>';
+        return;
+      }
+
+      for (const row of topDealers) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${escapeHtml(row.dealer_name)}</td>
+          <td>${row.count}</td>
+        `;
+        tbody.appendChild(tr);
+      }
+    }
+
+    /**
+     * Обновляет UI дашборда.
+     */
+    function renderDashboard(data) {
+      document.getElementById("kpiTotalOrders").textContent = data.total_orders;
+      document.getElementById("kpiPeriodHint").textContent =
+        PERIOD_LABELS[currentPeriod] || "в выбранном периоде";
+
+      const avgEl = document.getElementById("kpiAvgDays");
+      if (data.average_completion_days === null || data.average_completion_days === undefined) {
+        avgEl.textContent = "—";
+      } else {
+        avgEl.textContent = `${data.average_completion_days} дн.`;
+      }
+
+      renderStatusSection(data.orders_by_status || {});
+      renderDaysTable(data.orders_by_day || []);
+      renderDealersTable(data.top_dealers || []);
+    }
+
+    /**
+     * Загружает и отображает аналитику.
+     */
+    async function loadDashboard() {
+      hideError();
+      loadingState.classList.add("visible");
+      analyticsContent.classList.add("loading");
+
+      try {
+        const data = await fetchDashboard(currentPeriod);
+        if (data) {
+          renderDashboard(data);
+        }
+      } catch (err) {
+        showError(err.message || "Ошибка загрузки аналитики.");
+      } finally {
+        loadingState.classList.remove("visible");
+        analyticsContent.classList.remove("loading");
+      }
+    }
+
+    /**
+     * Устанавливает активную кнопку периода.
+     */
+    function setActivePeriodButton(period) {
+      periodButtons.querySelectorAll(".period-btn").forEach((btn) => {
+        btn.classList.toggle("active", btn.dataset.period === period);
+      });
+    }
+
+    /**
+     * Выход из системы.
+     */
+    function logout() {
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("authUsername");
+      localStorage.removeItem("authRole");
+      localStorage.removeItem("authFullName");
+      localStorage.removeItem("authManagerId");
+      redirectToLogin();
+    }
+
+    /**
+     * Возврат на главную страницу по роли.
+     */
+    function goBack() {
+      const role = localStorage.getItem("authRole");
+      const url = ROLE_REDIRECTS[role] || "/static/admin.html";
+      window.location.href = url;
+    }
+
+    document.getElementById("btnBack").addEventListener("click", goBack);
+    document.getElementById("btnLogout").addEventListener("click", logout);
+
+    periodButtons.addEventListener("click", async (event) => {
+      const button = event.target.closest(".period-btn");
+      if (!button) return;
+
+      const period = button.dataset.period;
+      if (!period || period === currentPeriod) return;
+
+      currentPeriod = period;
+      setActivePeriodButton(period);
+      await loadDashboard();
+    });
+
+    if (checkAuth()) {
+      loadDashboard();
+    }
+  </script>
+</body>
+</html>
