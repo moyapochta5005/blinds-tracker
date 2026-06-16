@@ -22,7 +22,8 @@ services:
       SECRET_KEY: ${SECRET_KEY:-change-me-in-production}
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
       # Абсолютный путь к БД внутри тома (4 слэша — стандарт SQLite URL)
-      DATABASE_URL: sqlite:////app/data/orders.db
+      DATABASE_URL: ${DATABASE_URL}
+      INTEGRATION_API_KEY: ${INTEGRATION_API_KEY:-}
     volumes:
       # Том для orders.db: монтируем каталог, а не файл (Docker создаёт директорию при mount файла)
       - orders_db:/app/data
