@@ -2,13 +2,14 @@
 
 import os
 import secrets
+from datetime import datetime, timedelta
 from typing import Annotated, Optional
 
 from fastapi import APIRouter, Depends, Header, HTTPException, status
 from sqlalchemy.orm import Session, joinedload
 
 from app.database import get_db
-from app.models import Order, OrderStage, User
+from app.models import CashHandover, Order, OrderStage, Payment, User
 from app.notifications import send_telegram_notification
 from app.schemas import (
     IntegrationOrderCreate,
@@ -279,3 +280,67 @@ def get_order_status_from_1c(
     """Получить статус заказа по external_id из 1С."""
     order = _get_order_by_external_id(db, external_id)
     return _order_to_integration_response(order)
+
+
+@router.get("/payments")
+def get_payments_from_1c(
+    db: DbSession,
+    _: ApiKeyAuth,
+    from_date: Optional[str] = None,
+    to_date: Optional[str] = None,
+) -> list[dict]:
+    """Получить список оплат для интеграции с 1С."""
+    query = db.query(Payment)
+    if from_date is not None:
+        query = query.filter(
+            Payment.received_at >= datetime.strptime(from_date, "%Y-%m-%d")
+        )
+    if to_date is not None:
+        query = query.filter(
+            Payment.received_at
+            <= datetime.strptime(to_date, "%Y-%m-%d") + timedelta(days=1)
+        )
+    payments = query.all()
+    return [
+        {
+            "id": p.id,
+            "order_id": p.order_id,
+            "dealer_id": p.dealer_id,
+            "courier_id": p.courier_id,
+            "amount": str(p.amount),
+            "received_at": p.received_at.isoformat(),
+            "handover_id": p.handover_id,
+        }
+        for p in payments
+    ]
+
+
+@router.get("/handovers")
+def get_handovers_from_1c(
+    db: DbSession,
+    _: ApiKeyAuth,
+    from_date: Optional[str] = None,
+    to_date: Optional[str] = None,
+) -> list[dict]:
+    """Получить список сдач наличных для интеграции с 1С."""
+    query = db.query(CashHandover)
+    if from_date is not None:
+        query = query.filter(
+            CashHandover.handed_at >= datetime.strptime(from_date, "%Y-%m-%d")
+        )
+    if to_date is not None:
+        query = query.filter(
+            CashHandover.handed_at
+            <= datetime.strptime(to_date, "%Y-%m-%d") + timedelta(days=1)
+        )
+    handovers = query.all()
+    return [
+        {
+            "id": h.id,
+            "courier_id": h.courier_id,
+            "cashier_id": h.cashier_id,
+            "total_amount": str(h.total_amount),
+            "handed_at": h.handed_at.isoformat(),
+        }
+        for h in handovers
+    ]
