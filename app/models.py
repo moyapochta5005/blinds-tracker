@@ -8,8 +8,20 @@ from sqlalchemy.orm import relationship
 from app.database import Base
 
 
+class Company(Base):
+    """Компания-клиент сервиса (тенант)."""
+
+    __tablename__ = "companies"
+
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(255), nullable=False)
+    slug = Column(String(100), unique=True, nullable=False, index=True)
+    is_active = Column(Boolean, default=True, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+
 class User(Base):
-    """Пользователь системы (admin, manager, dealer, courier, cashier)."""
+    """Пользователь системы (admin, manager, dealer, courier, cashier, superadmin)."""
 
     __tablename__ = "users"
 
@@ -21,6 +33,7 @@ class User(Base):
     manager_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     phone = Column(String, nullable=True)
     is_active = Column(Boolean, default=True, nullable=False)
+    company_id = Column(Integer, ForeignKey("companies.id"), nullable=True, index=True)
 
     orders = relationship(
         "Order",
@@ -45,6 +58,7 @@ class Order(Base):
     manager_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
     dealer_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     courier_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    company_id = Column(Integer, ForeignKey("companies.id"), nullable=True, index=True)
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at = Column(
         DateTime,
@@ -87,6 +101,7 @@ class CashHandover(Base):
     cashier_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     total_amount = Column(Numeric(10, 2), nullable=False)
     handed_at = Column(DateTime, default=datetime.utcnow)
+    company_id = Column(Integer, ForeignKey("companies.id"), nullable=True, index=True)
 
 
 class Payment(Base):
@@ -101,3 +116,4 @@ class Payment(Base):
     amount = Column(Numeric(10, 2), nullable=False)
     received_at = Column(DateTime, default=datetime.utcnow)
     handover_id = Column(Integer, ForeignKey("cash_handovers.id"), nullable=True)
+    company_id = Column(Integer, ForeignKey("companies.id"), nullable=True, index=True)

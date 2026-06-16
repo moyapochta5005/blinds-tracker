@@ -21,17 +21,12 @@ services:
     environment:
       SECRET_KEY: ${SECRET_KEY:-change-me-in-production}
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
-      # Абсолютный путь к БД внутри тома (4 слэша — стандарт SQLite URL)
       DATABASE_URL: ${DATABASE_URL}
       INTEGRATION_API_KEY: ${INTEGRATION_API_KEY:-}
-    volumes:
-      # Том для orders.db: монтируем каталог, а не файл (Docker создаёт директорию при mount файла)
-      - orders_db:/app/data
     depends_on:
       db:
         condition: service_healthy
     restart: unless-stopped
 
 volumes:
-  orders_db:
   postgres_data: {}

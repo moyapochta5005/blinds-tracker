@@ -4,53 +4,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
-from sqlalchemy import inspect, text
 
 from app.database import Base, engine
 from app.create_admin import create_initial_users
-from app.migrate import run_migrations
 from app.routers import analytics, auth, cashier, couriers, dealers, integration, orders, qr, users
 
-
-def _migrate_orders_table() -> None:
-    """Добавляет новые колонки в существующую таблицу orders (SQLite)."""
-    inspector = inspect(engine)
-    if not inspector.has_table("orders"):
-        return
-
-    column_names = {col["name"] for col in inspector.get_columns("orders")}
-    if "telegram_chat_id" not in column_names:
-        with engine.begin() as conn:
-            conn.execute(
-                text("ALTER TABLE orders ADD COLUMN telegram_chat_id VARCHAR(50)")
-            )
-    if "manager_id" not in column_names:
-        with engine.begin() as conn:
-            conn.execute(
-                text("ALTER TABLE orders ADD COLUMN manager_id INTEGER")
-            )
-    if "external_id" not in column_names:
-        with engine.begin() as conn:
-            conn.execute(
-                text("ALTER TABLE orders ADD COLUMN external_id VARCHAR(100)")
-            )
-            conn.execute(
-                text(
-                    "CREATE UNIQUE INDEX IF NOT EXISTS "
-                    "ix_orders_external_id ON orders (external_id)"
-                )
-            )
-
-
-import os
-DATABASE_URL = os.getenv("DATABASE_URL", "")
-
-if not DATABASE_URL.startswith("postgresql"):
-    # SQLite: запускаем старые миграции
-    run_migrations()
-    _migrate_orders_table()
-
-# Создание таблиц (работает для любой БД через SQLAlchemy)
+# Создание таблиц
 Base.metadata.create_all(bind=engine)
 
 create_initial_users()
@@ -62,7 +21,6 @@ app = FastAPI(
     redoc_url=None,
     openapi_url=None,
 )
-
 
 # CORS: разрешаем запросы к API с любого источника (для фронтенда)
 app.add_middleware(

@@ -1,7 +1,7 @@
 """Скрипт начальной инициализации пользователей в базе данных."""
 
 from app.database import Base, SessionLocal, engine
-from app.models import User
+from app.models import Company, User
 from app.security import hash_password
 
 ADMIN_USERNAME = "admin"
@@ -22,6 +22,12 @@ def create_initial_users() -> None:
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
     try:
+        company = db.query(Company).filter(Company.slug == "shtora").first()
+        if not company:
+            company = Company(name="Штора", slug="shtora", is_active=True)
+            db.add(company)
+            db.flush()
+
         admin = db.query(User).filter(User.username == ADMIN_USERNAME).first()
         if admin is None:
             admin = User(
@@ -30,6 +36,7 @@ def create_initial_users() -> None:
                 full_name=ADMIN_FULL_NAME,
                 role="admin",
                 is_active=True,
+                company_id=company.id,
             )
             db.add(admin)
             print(f"Создан администратор: {ADMIN_USERNAME}")
@@ -44,6 +51,7 @@ def create_initial_users() -> None:
                         full_name=full_name,
                         role="manager",
                         is_active=True,
+                        company_id=company.id,
                     )
                 )
                 print(f"Создан менеджер: {username} ({full_name})")
