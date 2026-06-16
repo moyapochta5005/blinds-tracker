@@ -42,11 +42,17 @@ def _migrate_orders_table() -> None:
             )
 
 
-run_migrations()
+import os
+DATABASE_URL = os.getenv("DATABASE_URL", "")
 
-# Создание таблиц при первом запуске
+if not DATABASE_URL.startswith("postgresql"):
+    # SQLite: запускаем старые миграции
+    run_migrations()
+    _migrate_orders_table()
+
+# Создание таблиц (работает для любой БД через SQLAlchemy)
 Base.metadata.create_all(bind=engine)
-_migrate_orders_table()
+
 create_initial_users()
 
 app = FastAPI(
