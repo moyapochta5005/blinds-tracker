@@ -804,7 +804,10 @@
 
       for (const order of orders) {
         const tr = document.createElement("tr");
-        const dealerLabel = order.dealer_id != null ? String(order.dealer_id) : "—";
+        const dealerLabel = order.dealer_name
+          || order.dealer?.full_name
+          || order.dealer?.name
+          || (order.dealer_id != null ? `Дилер #${order.dealer_id}` : "—");
         tr.innerHTML = `
           <td>${escapeHtml(orderNumber(order))}</td>
           <td>${escapeHtml(order.product_name)}</td>
