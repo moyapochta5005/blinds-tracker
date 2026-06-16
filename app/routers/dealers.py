@@ -65,7 +65,7 @@ def _get_dealer_or_404(db: Session, dealer_id: int) -> User:
 
 def _check_dealer_access(dealer: User, current_user: dict[str, Any]) -> None:
     """Проверяет, что менеджер имеет доступ к дилеру."""
-    if current_user["role"] == "admin":
+    if current_user["role"] in ("admin", "superadmin"):
         return
     if dealer.manager_id != current_user["manager_id"]:
         raise HTTPException(
@@ -83,6 +83,10 @@ def list_dealers(
     _require_admin_or_manager(current_user)
 
     query = db.query(User).filter(User.role == "dealer")
+
+    company_id = current_user.get("company_id")
+    if current_user["role"] != "superadmin" and company_id is not None:
+        query = query.filter(User.company_id == company_id)
 
     if current_user["role"] == "manager":
         query = query.filter(User.manager_id == current_user["manager_id"])
@@ -155,6 +159,7 @@ def create_dealer(
         phone=dealer_data.phone,
         manager_id=manager_id,
         is_active=True,
+        company_id=current_user.get("company_id"),
     )
     db.add(dealer)
     db.commit()

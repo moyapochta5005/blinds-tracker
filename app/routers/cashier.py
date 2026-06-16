@@ -70,6 +70,14 @@ def list_couriers_with_unsettled(
     """Список курьеров с несданными остатками."""
     _require_cashier_or_admin(current_user)
 
+    company_id = current_user.get("company_id")
+    filter_conditions = [
+        User.role == "courier",
+        Payment.handover_id.is_(None),
+    ]
+    if current_user["role"] != "superadmin" and company_id is not None:
+        filter_conditions.append(User.company_id == company_id)
+
     rows = (
         db.query(
             User.id,
@@ -77,10 +85,7 @@ def list_couriers_with_unsettled(
             func.sum(Payment.amount).label("unsettled_amount"),
         )
         .join(Payment, Payment.courier_id == User.id)
-        .filter(
-            User.role == "courier",
-            Payment.handover_id.is_(None),
-        )
+        .filter(*filter_conditions)
         .group_by(User.id, User.full_name)
         .all()
     )
@@ -103,12 +108,14 @@ def list_handovers(
     """История всех сдач наличных."""
     _require_cashier_or_admin(current_user)
 
-    rows = (
+    company_id = current_user.get("company_id")
+    query = (
         db.query(CashHandover, User.full_name)
         .join(User, User.id == CashHandover.courier_id)
-        .order_by(CashHandover.handed_at.desc())
-        .all()
     )
+    if current_user["role"] != "superadmin" and company_id is not None:
+        query = query.filter(CashHandover.company_id == company_id)
+    rows = query.order_by(CashHandover.handed_at.desc()).all()
 
     return [
         _handover_to_out(handover, courier_name)
@@ -146,6 +153,7 @@ def create_handover(
         courier_id=handover_data.courier_id,
         cashier_id=cashier_id,
         total_amount=total_amount,
+        company_id=current_user.get("company_id"),
     )
     db.add(handover)
     db.flush()

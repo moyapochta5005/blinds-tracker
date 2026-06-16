@@ -65,12 +65,11 @@ def list_couriers(
     """Получить список курьеров."""
     _require_admin_or_manager(current_user)
 
-    return (
-        db.query(User)
-        .filter(User.role == "courier")
-        .order_by(User.full_name)
-        .all()
-    )
+    query = db.query(User).filter(User.role == "courier")
+    company_id = current_user.get("company_id")
+    if current_user["role"] != "superadmin" and company_id is not None:
+        query = query.filter(User.company_id == company_id)
+    return query.order_by(User.full_name).all()
 
 
 @router.get("/orders", response_model=List[OrderResponse])
@@ -134,6 +133,7 @@ def create_payment(
         dealer_id=order.dealer_id,
         courier_id=courier_id,
         amount=payment_data.amount,
+        company_id=current_user.get("company_id"),
     )
     db.add(payment)
     db.commit()

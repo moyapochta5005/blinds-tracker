@@ -40,6 +40,7 @@ def _payload_to_user(payload: dict[str, Any]) -> dict[str, Any]:
     role = payload.get("role")
     manager_id = payload.get("manager_id")
     full_name = payload.get("full_name")
+    company_id = payload.get("company_id")
 
     if not username or not role or manager_id is None or not full_name:
         raise HTTPException(
@@ -53,6 +54,7 @@ def _payload_to_user(payload: dict[str, Any]) -> dict[str, Any]:
         "role": role,
         "manager_id": int(manager_id),
         "full_name": full_name,
+        "company_id": company_id,
     }
 
 
@@ -99,6 +101,7 @@ def create_access_token(
     role: str,
     manager_id: int,
     full_name: str,
+    company_id: Optional[int] = None,
     expires_hours: int = 24,
 ) -> str:
     """Создаёт JWT-токен с данными пользователя."""
@@ -108,6 +111,7 @@ def create_access_token(
         "role": role,
         "manager_id": manager_id,
         "full_name": full_name,
+        "company_id": company_id,
         "exp": expire,
     }
     return jwt.encode(payload, SECRET_KEY, algorithm=JWT_ALGORITHM)

@@ -42,6 +42,7 @@ def login(credentials: LoginRequest, db: DbSession) -> LoginResponse:
         role=user.role,
         manager_id=user.id,
         full_name=user.full_name,
+        company_id=user.company_id,
     )
 
     return LoginResponse(

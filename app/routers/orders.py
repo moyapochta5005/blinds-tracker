@@ -89,6 +89,10 @@ def list_orders(
     """Получить список заказов с учётом роли пользователя."""
     query = db.query(Order).options(joinedload(Order.manager), joinedload(Order.stages))
 
+    company_id = current_user.get("company_id")
+    if current_user["role"] != "superadmin" and company_id is not None:
+        query = query.filter(Order.company_id == company_id)
+
     if current_user["role"] == "manager":
         query = query.filter(Order.manager_id == current_user["manager_id"])
     elif current_user["role"] == "dealer":
@@ -178,6 +182,7 @@ def create_order(
         telegram_chat_id=order_data.telegram_chat_id,
         manager_id=manager_id,
         dealer_id=order_dealer_id,
+        company_id=current_user.get("company_id"),
     )
     db.add(order)
     db.flush()
