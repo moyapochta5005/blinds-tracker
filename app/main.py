@@ -83,8 +83,8 @@ app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 @app.get("/")
 def root() -> RedirectResponse:
-    """Редирект на страницу отслеживания заказа."""
-    return RedirectResponse(url="/static/track.html")
+    """Редирект на страницу входа."""
+    return RedirectResponse(url="/static/login.html")
 
 
 @app.get("/health")
