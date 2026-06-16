@@ -350,11 +350,11 @@
     <main class="content">
       <div class="alert" id="alertError"></div>
 
-      <div class="period-buttons" id="periodButtons" role="tablist" aria-label="Период">
-        <button class="period-btn" type="button" data-period="day">Сегодня</button>
-        <button class="period-btn" type="button" data-period="week">Неделя</button>
-        <button class="period-btn active" type="button" data-period="month">Месяц</button>
-        <button class="period-btn" type="button" data-period="all">Всё время</button>
+      <div class="period-buttons">
+        <button class="period-btn active" data-period="month">Месяц</button>
+        <button class="period-btn" data-period="day">Сегодня</button>
+        <button class="period-btn" data-period="week">Неделя</button>
+        <button class="period-btn" data-period="all">Всё время</button>
       </div>
 
       <div class="loading-state" id="loadingState">
@@ -411,6 +411,21 @@
               </table>
             </div>
           </section>
+
+          <section class="panel-card" id="managersSection" style="display: none;">
+            <h2>Заказы по менеджерам</h2>
+            <div class="data-table-wrap">
+              <table class="data-table" id="managersTable">
+                <thead>
+                  <tr>
+                    <th>Менеджер</th>
+                    <th>Количество заказов</th>
+                  </tr>
+                </thead>
+                <tbody id="managersTableBody"></tbody>
+              </table>
+            </div>
+          </section>
         </div>
       </div>
     </main>
@@ -455,7 +470,7 @@
     const alertError = document.getElementById("alertError");
     const loadingState = document.getElementById("loadingState");
     const analyticsContent = document.getElementById("analyticsContent");
-    const periodButtons = document.getElementById("periodButtons");
+    const periodButtons = document.querySelector(".period-buttons");
 
     /**
      * Перенаправляет на страницу входа.
@@ -594,6 +609,23 @@
     }
 
     /**
+     * Рендерит таблицу заказов по менеджерам.
+     */
+    function renderManagersTable(ordersByManager) {
+      const tbody = document.getElementById("managersTableBody");
+      tbody.innerHTML = "";
+
+      for (const row of ordersByManager) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${escapeHtml(row.manager_name)}</td>
+          <td>${row.count}</td>
+        `;
+        tbody.appendChild(tr);
+      }
+    }
+
+    /**
      * Рендерит таблицу топ дилеров.
      */
     function renderDealersTable(topDealers) {
@@ -634,18 +666,30 @@
       renderStatusSection(data.orders_by_status || {});
       renderDaysTable(data.orders_by_day || []);
       renderDealersTable(data.top_dealers || []);
+
+      const role = localStorage.getItem("authRole");
+      const ordersByManager = data.orders_by_manager || [];
+      const managersSection = document.getElementById("managersSection");
+
+      if (role === "admin" && ordersByManager.length > 0) {
+        managersSection.style.display = "";
+        renderManagersTable(ordersByManager);
+      } else {
+        managersSection.style.display = "none";
+      }
     }
 
     /**
      * Загружает и отображает аналитику.
      */
-    async function loadDashboard() {
+    async function loadDashboard(period) {
+      currentPeriod = period;
       hideError();
       loadingState.classList.add("visible");
       analyticsContent.classList.add("loading");
 
       try {
-        const data = await fetchDashboard(currentPeriod);
+        const data = await fetchDashboard(period);
         if (data) {
           renderDashboard(data);
         }
@@ -655,15 +699,6 @@
         loadingState.classList.remove("visible");
         analyticsContent.classList.remove("loading");
       }
-    }
-
-    /**
-     * Устанавливает активную кнопку периода.
-     */
-    function setActivePeriodButton(period) {
-      periodButtons.querySelectorAll(".period-btn").forEach((btn) => {
-        btn.classList.toggle("active", btn.dataset.period === period);
-      });
     }
 
     /**
@@ -690,20 +725,20 @@
     document.getElementById("btnBack").addEventListener("click", goBack);
     document.getElementById("btnLogout").addEventListener("click", logout);
 
-    periodButtons.addEventListener("click", async (event) => {
+    periodButtons.addEventListener("click", (event) => {
       const button = event.target.closest(".period-btn");
       if (!button) return;
 
-      const period = button.dataset.period;
-      if (!period || period === currentPeriod) return;
+      periodButtons.querySelectorAll(".period-btn").forEach((btn) => {
+        btn.classList.remove("active");
+      });
+      button.classList.add("active");
 
-      currentPeriod = period;
-      setActivePeriodButton(period);
-      await loadDashboard();
+      loadDashboard(button.dataset.period);
     });
 
     if (checkAuth()) {
-      loadDashboard();
+      loadDashboard("month");
     }
   </script>
 </body>
