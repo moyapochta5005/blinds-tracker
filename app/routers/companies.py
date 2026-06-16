@@ -46,6 +46,16 @@ class CompanyUpdate(BaseModel):
     is_active: Optional[bool] = None
 
 
+class CompanyRegister(BaseModel):
+    """Схема публичной регистрации компании."""
+
+    company_name: str
+    admin_full_name: str
+    admin_username: str
+    admin_password: str
+    admin_phone: Optional[str] = None
+
+
 def _require_superadmin(current_user: dict[str, Any]) -> None:
     """Разрешает доступ только суперадмину."""
     if current_user["role"] != "superadmin":
@@ -53,6 +63,26 @@ def _require_superadmin(current_user: dict[str, Any]) -> None:
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Доступ только для суперадмина",
         )
+
+
+def _generate_slug(name: str) -> str:
+    """Генерирует slug из названия компании (латиница + цифры + дефис)."""
+    import re
+
+    name = name.lower().strip()
+    transliteration = {
+        'а':'a','б':'b','в':'v','г':'g','д':'d','е':'e','ё':'yo',
+        'ж':'zh','з':'z','и':'i','й':'y','к':'k','л':'l','м':'m',
+        'н':'n','о':'o','п':'p','р':'r','с':'s','т':'t','у':'u',
+        'ф':'f','х':'kh','ц':'ts','ч':'ch','ш':'sh','щ':'shch',
+        'ъ':'','ы':'y','ь':'','э':'e','ю':'yu','я':'ya'
+    }
+    result = ''
+    for char in name:
+        result += transliteration.get(char, char)
+    result = re.sub(r'[^a-z0-9]+', '-', result)
+    result = result.strip('-')
+    return result or 'company'
 
 
 @router.get("", response_model=List[CompanyResponse])
@@ -120,6 +150,53 @@ def create_company(
         "slug": company.slug,
         "is_active": company.is_active,
         "created_at": company.created_at.strftime("%d.%m.%Y"),
+    }
+
+
+@router.post("/register", status_code=status.HTTP_201_CREATED)
+def register_company(
+    data: CompanyRegister,
+    db: DbSession,
+) -> dict:
+    """Публичная регистрация новой компании. Авторизация не требуется."""
+
+    existing_user = db.query(User).filter(User.username == data.admin_username).first()
+    if existing_user is not None:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Пользователь с таким логином уже существует",
+        )
+
+    base_slug = _generate_slug(data.company_name)
+    slug = base_slug
+    counter = 1
+    while db.query(Company).filter(Company.slug == slug).first() is not None:
+        slug = f"{base_slug}-{counter}"
+        counter += 1
+
+    company = Company(name=data.company_name, slug=slug, is_active=True)
+    db.add(company)
+    db.flush()
+
+    admin = User(
+        username=data.admin_username,
+        password_hash=hash_password(data.admin_password),
+        full_name=data.admin_full_name,
+        role="admin",
+        is_active=True,
+        phone=data.admin_phone,
+        company_id=company.id,
+    )
+    db.add(admin)
+    db.commit()
+    db.refresh(company)
+
+    return {
+        "success": True,
+        "company_id": company.id,
+        "company_name": company.name,
+        "slug": company.slug,
+        "admin_username": data.admin_username,
     }
 
 
