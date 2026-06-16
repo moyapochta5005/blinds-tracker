@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Касса — Blinds Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #f0f4f8;
+      --surface: #ffffff;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --primary-light: #eff6ff;
+      --success: #16a34a;
+      --success-light: #dcfce7;
+      --warning: #d97706;
+      --warning-light: #fef3c7;
+      --danger: #dc2626;
+      --danger-light: #fef2f2;
+      --pending: #cbd5e1;
+      --shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 4px 16px rgba(15, 23, 42, 0.06);
+      --radius: 12px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .app {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 16px 28px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .topbar-title h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .topbar-user {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .topbar-user-name {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .btn-logout {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      font-family: inherit;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+
+    .btn-logout:hover {
+      background: var(--danger-light);
+      color: var(--danger);
+      border-color: #fecaca;
+    }
+
+    .btn-logout svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .content {
+      flex: 1;
+      padding: 24px 28px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 28px;
+    }
+
+    .alert {
+      display: none;
+      padding: 12px 16px;
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+    }
+
+    .alert.visible {
+      display: block;
+    }
+
+    .alert-error {
+      background: var(--danger-light);
+      color: var(--danger);
+      border: 1px solid #fecaca;
+    }
+
+    .alert-success {
+      background: var(--success-light);
+      color: var(--success);
+      border: 1px solid #bbf7d0;
+    }
+
+    .section-block {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .section-heading {
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    .loading-state,
+    .empty-state {
+      text-align: center;
+      padding: 48px 20px;
+      color: var(--text-muted);
+      font-size: 0.875rem;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 32px;
+      height: 32px;
+      border: 3px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin-bottom: 12px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .data-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+
+    .data-table th,
+    .data-table td {
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .data-table th {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+      background: var(--bg);
+    }
+
+    .data-table tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    .amount-cell {
+      font-weight: 600;
+      color: var(--primary);
+      white-space: nowrap;
+    }
+
+    .btn-accept {
+      padding: 6px 12px;
+      font-family: inherit;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #fff;
+      background: var(--primary);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s;
+    }
+
+    .btn-accept:hover:not(:disabled) {
+      background: var(--primary-hover);
+    }
+
+    .btn-accept:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    @media (max-width: 600px) {
+      .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 12px 16px;
+      }
+
+      .topbar-user {
+        width: 100%;
+        justify-content: space-between;
+      }
+
+      .content {
+        padding: 16px;
+        gap: 20px;
+      }
+
+      .data-table th,
+      .data-table td {
+        padding: 10px 12px;
+        font-size: 0.8125rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="topbar-title">
+        <h1>Касса</h1>
+      </div>
+      <div class="topbar-user">
+        <span class="topbar-user-name" id="cashierName"></span>
+        <button class="btn-logout" id="btnLogout" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Выйти
+        </button>
+      </div>
+    </header>
+
+    <main class="content">
+      <div class="alert alert-success" id="alertSuccess" role="status"></div>
+      <div class="alert alert-error" id="alertError" role="alert"></div>
+
+      <section class="section-block">
+        <h2 class="section-heading">Курьеры с несданными деньгами</h2>
+
+        <div class="loading-state" id="couriersLoading">
+          <div class="spinner"></div>
+          <p>Загрузка…</p>
+        </div>
+
+        <div class="empty-state hidden" id="couriersEmpty">
+          <p>Нет курьеров с несданными деньгами</p>
+        </div>
+
+        <div class="data-card hidden" id="couriersCard">
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Имя курьера</th>
+                  <th>Сумма к сдаче</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="couriersTbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="section-block">
+        <h2 class="section-heading">История сдач</h2>
+
+        <div class="loading-state" id="handoversLoading">
+          <div class="spinner"></div>
+          <p>Загрузка…</p>
+        </div>
+
+        <div class="empty-state hidden" id="handoversEmpty">
+          <p>История сдач пуста</p>
+        </div>
+
+        <div class="data-card hidden" id="handoversCard">
+          <div class="table-wrap">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Курьер</th>
+                  <th>Сумма</th>
+                  <th>Дата</th>
+                </tr>
+              </thead>
+              <tbody id="handoversTbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const TOKEN_KEY = "authToken";
+
+    const cashierName = document.getElementById("cashierName");
+    const btnLogout = document.getElementById("btnLogout");
+    const alertSuccess = document.getElementById("alertSuccess");
+    const alertError = document.getElementById("alertError");
+    const couriersLoading = document.getElementById("couriersLoading");
+    const couriersEmpty = document.getElementById("couriersEmpty");
+    const couriersCard = document.getElementById("couriersCard");
+    const couriersTbody = document.getElementById("couriersTbody");
+    const handoversLoading = document.getElementById("handoversLoading");
+    const handoversEmpty = document.getElementById("handoversEmpty");
+    const handoversCard = document.getElementById("handoversCard");
+    const handoversTbody = document.getElementById("handoversTbody");
+
+    let authToken = "";
+    let successTimeout = null;
+
+    /**
+     * Декодирует payload JWT без внешних библиотек.
+     */
+    function decodeJwt(token) {
+      try {
+        const base64 = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+        return JSON.parse(atob(base64));
+      } catch {
+        return null;
+      }
+    }
+
+    /**
+     * Перенаправляет на страницу входа администратора.
+     */
+    function redirectToAdmin() {
+      window.location.href = "/static/admin.html";
+    }
+
+    /**
+     * Проверяет авторизацию кассира при загрузке страницы.
+     */
+    function checkAuth() {
+      const token = localStorage.getItem(TOKEN_KEY);
+      if (!token) {
+        redirectToAdmin();
+        return null;
+      }
+
+      const payload = decodeJwt(token);
+      if (!payload || payload.role !== "cashier") {
+        redirectToAdmin();
+        return null;
+      }
+
+      authToken = token;
+      cashierName.textContent = payload.full_name || "";
+      return payload;
+    }
+
+    /**
+     * Экранирует HTML для безопасного вывода.
+     */
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    /**
+     * Форматирует дату ISO в короткий локальный вид.
+     */
+    function formatDateShort(isoString) {
+      return new Date(isoString).toLocaleString("ru-RU", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    }
+
+    /**
+     * Форматирует сумму в рублях.
+     */
+    function formatAmount(amount) {
+      const value = Number(amount);
+      return value.toLocaleString("ru-RU", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }) + " ₽";
+    }
+
+    /**
+     * Показывает сообщение об ошибке.
+     */
+    function showError(message) {
+      alertError.textContent = message;
+      alertError.classList.add("visible");
+    }
+
+    /**
+     * Скрывает сообщение об ошибке.
+     */
+    function hideError() {
+      alertError.classList.remove("visible");
+      alertError.textContent = "";
+    }
+
+    /**
+     * Показывает уведомление об успехе.
+     */
+    function showSuccess(message) {
+      if (successTimeout) {
+        clearTimeout(successTimeout);
+      }
+      alertSuccess.textContent = message;
+      alertSuccess.classList.add("visible");
+      successTimeout = setTimeout(() => {
+        alertSuccess.classList.remove("visible");
+        alertSuccess.textContent = "";
+      }, 4000);
+    }
+
+    /**
+     * Очищает данные авторизации и перенаправляет на вход.
+     */
+    function clearAuthAndRedirect() {
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("authUsername");
+      localStorage.removeItem("authRole");
+      localStorage.removeItem("authFullName");
+      localStorage.removeItem("authManagerId");
+      redirectToAdmin();
+    }
+
+    /**
+     * Выполняет авторизованный GET-запрос к API.
+     */
+    async function apiFetch(url) {
+      const response = await fetch(url, {
+        headers: { Authorization: "Bearer " + authToken },
+      });
+
+      if (response.status === 401) {
+        clearAuthAndRedirect();
+        throw new Error("Сессия истекла");
+      }
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.detail || "Ошибка загрузки данных");
+      }
+
+      return response.json();
+    }
+
+    /**
+     * Выполняет авторизованный POST-запрос к API.
+     */
+    async function apiPost(url, body) {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          Authorization: "Bearer " + authToken,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      });
+
+      if (response.status === 401) {
+        clearAuthAndRedirect();
+        throw new Error("Сессия истекла");
+      }
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        const detail = data.detail;
+        const message = typeof detail === "string"
+          ? detail
+          : Array.isArray(detail)
+            ? detail.map((item) => item.msg || String(item)).join(", ")
+            : "Ошибка выполнения запроса";
+        throw new Error(message);
+      }
+
+      return response.json();
+    }
+
+    /**
+     * Отрисовывает таблицу курьеров с несданными деньгами.
+     */
+    function renderCouriers(couriers) {
+      couriersLoading.classList.add("hidden");
+
+      if (!couriers.length) {
+        couriersEmpty.classList.remove("hidden");
+        couriersCard.classList.add("hidden");
+        return;
+      }
+
+      couriersEmpty.classList.add("hidden");
+      couriersCard.classList.remove("hidden");
+      couriersTbody.innerHTML = "";
+
+      for (const courier of couriers) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${escapeHtml(courier.full_name)}</td>
+          <td class="amount-cell">${escapeHtml(formatAmount(courier.unsettled_amount))}</td>
+          <td><button class="btn-accept" type="button" data-courier-id="${courier.courier_id}">Принять деньги</button></td>
+        `;
+        couriersTbody.appendChild(tr);
+      }
+
+      couriersTbody.querySelectorAll(".btn-accept").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          acceptHandover(Number(btn.dataset.courierId), btn);
+        });
+      });
+    }
+
+    /**
+     * Отрисовывает таблицу истории сдач.
+     */
+    function renderHandovers(handovers) {
+      handoversLoading.classList.add("hidden");
+
+      if (!handovers.length) {
+        handoversEmpty.classList.remove("hidden");
+        handoversCard.classList.add("hidden");
+        return;
+      }
+
+      handoversEmpty.classList.add("hidden");
+      handoversCard.classList.remove("hidden");
+      handoversTbody.innerHTML = "";
+
+      for (const handover of handovers) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${escapeHtml(handover.courier_name)}</td>
+          <td class="amount-cell">${escapeHtml(formatAmount(handover.total_amount))}</td>
+          <td>${escapeHtml(formatDateShort(handover.handed_at))}</td>
+        `;
+        handoversTbody.appendChild(tr);
+      }
+    }
+
+    /**
+     * Загружает список курьеров с несданными деньгами.
+     */
+    async function loadCouriers() {
+      try {
+        const couriers = await apiFetch("/cashier/couriers");
+        renderCouriers(couriers);
+      } catch (err) {
+        couriersLoading.classList.add("hidden");
+        if (err.message !== "Сессия истекла") {
+          showError(err.message || "Не удалось загрузить список курьеров");
+        }
+      }
+    }
+
+    /**
+     * Загружает историю сдач.
+     */
+    async function loadHandovers() {
+      try {
+        const handovers = await apiFetch("/cashier/handovers");
+        renderHandovers(handovers);
+      } catch (err) {
+        handoversLoading.classList.add("hidden");
+        if (err.message !== "Сессия истекла") {
+          showError(err.message || "Не удалось загрузить историю сдач");
+        }
+      }
+    }
+
+    /**
+     * Принимает деньги от курьера.
+     */
+    async function acceptHandover(courierId, btn) {
+      btn.disabled = true;
+      hideError();
+
+      try {
+        const result = await apiPost("/cashier/handovers", { courier_id: courierId });
+        showSuccess("Деньги приняты: " + formatAmount(result.total_amount));
+        await Promise.all([loadCouriers(), loadHandovers()]);
+      } catch (err) {
+        if (err.message !== "Сессия истекла") {
+          showError(err.message || "Не удалось принять деньги");
+        }
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    /**
+     * Загружает оба списка данных.
+     */
+    async function loadAll() {
+      hideError();
+      couriersLoading.classList.remove("hidden");
+      couriersEmpty.classList.add("hidden");
+      couriersCard.classList.add("hidden");
+      handoversLoading.classList.remove("hidden");
+      handoversEmpty.classList.add("hidden");
+      handoversCard.classList.add("hidden");
+      await Promise.all([loadCouriers(), loadHandovers()]);
+    }
+
+    btnLogout.addEventListener("click", () => {
+      clearAuthAndRedirect();
+    });
+
+    if (checkAuth()) {
+      loadAll();
+    }
+  </script>
+</body>
+</html>
