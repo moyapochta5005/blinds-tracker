@@ -274,13 +274,20 @@ class PaymentOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class CourierUnsettledOut(BaseModel):
+    """Курьер с несданным остатком."""
+
+    courier_id: int
+    full_name: str
+    unsettled_amount: Decimal
+
+
 class CashHandoverOut(BaseModel):
     """Схема ответа с данными сдачи наличных."""
 
     id: int
     courier_id: int
+    courier_name: str
     cashier_id: int
     total_amount: Decimal
     handed_at: datetime
-
-    model_config = ConfigDict(from_attributes=True)
