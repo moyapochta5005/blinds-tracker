@@ -51,7 +51,11 @@ def _apply_scope(
     current_user: dict[str, Any],
     period_start: Optional[datetime],
 ) -> Any:
-    """Применяет фильтр по менеджеру и периоду создания заказа."""
+    """Применяет фильтр по компании, менеджеру и периоду создания заказа."""
+    if current_user["role"] != "superadmin":
+        company_id = current_user.get("company_id")
+        if company_id is not None:
+            query = query.filter(Order.company_id == company_id)
     if current_user["role"] == "manager":
         query = query.filter(Order.manager_id == current_user["manager_id"])
     if period_start is not None:
@@ -75,6 +79,8 @@ def get_dashboard(
 ) -> DashboardResponse:
     """Агрегированные метрики дашборда для администратора или менеджера."""
     period_start = _period_start(period)
+    company_id = current_user.get("company_id")
+    is_superadmin = current_user["role"] == "superadmin"
 
     base_query = _apply_scope(db.query(Order), current_user, period_start)
     total_orders = base_query.count()
@@ -99,6 +105,8 @@ def get_dashboard(
             db.query(User.id, User.full_name, func.count(Order.id))
             .join(Order, Order.manager_id == User.id)
         )
+        if not is_superadmin and company_id is not None:
+            manager_query = manager_query.filter(User.company_id == company_id)
         if period_start is not None:
             manager_query = manager_query.filter(Order.created_at >= period_start)
         manager_rows = (
@@ -155,6 +163,8 @@ def get_dashboard(
         .join(Order, Order.dealer_id == User.id)
         .filter(User.role == "dealer")
     )
+    if not is_superadmin and company_id is not None:
+        dealer_query = dealer_query.filter(User.company_id == company_id)
     if current_user["role"] == "manager":
         dealer_query = dealer_query.filter(
             Order.manager_id == current_user["manager_id"]
